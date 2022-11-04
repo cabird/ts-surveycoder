@@ -1,72 +1,75 @@
 import React from 'react';
-import {useState} from 'react';
+import { useState } from 'react';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
 
 interface MultiselectProps {
-  options: Array<string>;
+  codeSet: Array<string>;
   selectedCodes: Array<string>;
-  updateCodesCallback: (codes: Array<string>) => void;
+  onToggleCode: (code: string) => void;
+  onCodeSetChanged: (codes: Array<string>) => void;
 };
 
-function Multiselect( {options, selectedCodes, updateCodesCallback}: MultiselectProps) {
+function Multiselect(props: MultiselectProps) {
 
-    const [codeOptions, setCodeOptions] = useState(options);
-    const [selected, setSelected] = useState<string[]>(selectedCodes);
-    const [newCodeValue, setNewCodeValue] = useState<string>("");
-  
-    const toggle = (value: string) => {
-      const currentIndex = selected.indexOf(value);
-      let newSelected: string[] = [];
-      if (currentIndex === -1) {
-        newSelected = [...selected, value];
-      } else {
-        newSelected = selected.filter((_, i) => i !== currentIndex);
-      }
-      setSelected(newSelected);
-      updateCodesCallback(newSelected);
+  const [newCodeValue, setNewCodeValue] = useState<string>("");
+
+  const toggleCode = (value: string) => {
+    props.onToggleCode(value);
+  }
+
+  const addNewCode = () => {
+    const newCode = newCodeValue.trim();
+    if (newCode.length > 0 && !props.codeSet.includes(newCode)) {
+      const newCodeSet = [...props.codeSet, newCode];
+      props.onCodeSetChanged(newCodeSet);
+      setNewCodeValue("");
     }
+  }
 
-    const addNewCode = () => {
-      console.log("add new code added")
-      const newCode = newCodeValue;
-      if (newCode.length > 0 && !codeOptions.includes(newCode)) {
+  const onNewCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newCode = event.target.value;
+    console.log("new code is", newCode);
+    setNewCodeValue(newCode);
+  }
 
-        const newOptions = [...codeOptions, newCode];
-        setCodeOptions(newOptions);
-        const newSelected = [...selected, newCode];
-        setSelected(newSelected);
-        updateCodesCallback(newSelected);
-      }
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      addNewCode();
     }
+  }
 
-    const onNewCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const newCode = event.target.value;
-      console.log("new code is", newCode);
-      setNewCodeValue(newCode);
-    }
-    
-    codeOptions.sort();
-    return (
-      <div>
-        <TextField variant='outlined' label='Add a code' onChange={onNewCodeChange}/>
-        <Button variant='contained' onClick={addNewCode}>Add</Button>
-        <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray'}}>
-            <List component="nav" aria-label="main mailbox folders">
-              {codeOptions.map((code) => (
-              <ListItemButton selected={ selected.indexOf(code) !== -1 } onClick={ () => toggle(code) }>
+  props.codeSet.sort();
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={9} style={{ width: "100%" }}>
+        <TextField style={{ width: "100%" }} variant='outlined' value={newCodeValue} label='Add a code' onChange={onNewCodeChange} 
+        onKeyPress={handleKeyPress}/>
+      </Grid>
+      <Grid item xs={3}>
+        <Button variant='contained' style={{ height: "100%"}} onClick={addNewCode} >Add</Button>
+      </Grid>
+      <Grid item xs={12}>
+        <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray' }}>
+          <List component="nav" aria-label="Code List" sx={{ minHeight: 600 }} >
+            {props.codeSet.map((code) => (
+              <ListItemButton key={code} sx={{ height: 24 }}
+                selected={props.selectedCodes.indexOf(code) !== -1}
+                onClick={() => toggleCode(code)}>
                 <ListItemText primary={code} />
               </ListItemButton>
-              ))}
-            </List>
+            ))}
+          </List>
         </Box>
-      </div>
-    );
-  }
-  
-  export default Multiselect;
-  
+      </Grid>
+    </Grid>
+  );
+}
+
+export default Multiselect;

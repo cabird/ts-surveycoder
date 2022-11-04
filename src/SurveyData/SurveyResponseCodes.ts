@@ -3,9 +3,11 @@ export class SurveyResponseCodes {
     // dictionary that maps a response id to a dictionary that maps 
     // the question id to the list of response codes for that response for that question
     private responseCodes: Map<string, Map<string, string[]>>;
+    private questionCodes: Map<string, string[]>;
 
     constructor() {
         this.responseCodes = new Map<string, Map<string, string[]>>();
+        this.questionCodes = new Map<string, string[]>();
     }
 
     private getResponseDict(responseId: string): Map<string, string[]> {
@@ -23,14 +25,38 @@ export class SurveyResponseCodes {
         } else {
             response.set(questionId, [responseCode]);
         }
+
+        // make sure that the set of question codes for this question has all the codes that were passed in.
+        // this makes it hard to delete a code from a question, but that's not a use case we need to support.
+        if (!this.questionCodes.has(questionId)) {
+            this.questionCodes.set(questionId, [responseCode]);
+        } else {
+            const codes = this.questionCodes.get(questionId);
+            if (!codes?.includes(responseCode)) {
+                codes?.push(responseCode);
+            }
+        }
     }
 
-    public setResponseCodesForResponseAndQuestion(responseId: string, questionId: string, responseCodes: string[]) {
+    public setCodesForResponseAndQuestion(responseId: string, questionId: string, responseCodes: string[]) {
         const response = this.getResponseDict(responseId);
         response.set(questionId, responseCodes);
+        
+        // make sure that the set of question codes for this question has all the codes that were passed in.
+        // this makes it hard to delete a code from a question, but that's not a use case we need to support.
+        if (!this.questionCodes.has(questionId)) {
+            this.questionCodes.set(questionId, responseCodes);
+        } else {
+            const codes = this.questionCodes.get(questionId);
+            responseCodes.forEach((code) => {
+                if (!codes?.includes(code)) {
+                    codes?.push(code);
+                }
+            });
+        }
     }
 
-    public getResponseCodesForResponseAndQuestion(responseId: string, questionId: string): string[] {
+    public getCodesForResponseAndQuestion(responseId: string, questionId: string): string[] {
         const response = this.getResponseDict(responseId);
         if (response.has(questionId)) {
             return response.get(questionId)!;
@@ -38,7 +64,18 @@ export class SurveyResponseCodes {
         return [];
     }
 
+    public hasCodesForQuestion(questionId: string): boolean {
+        return this.questionCodes.has(questionId);
+    }
+
     public getCodesForQuestion(questionId: string): string[] {
+
+        if (this.questionCodes.has(questionId)) {
+            return this.questionCodes.get(questionId)!;
+        } else {
+            return [];
+        }
+
         const codes: string[] = [];
         this.responseCodes.forEach((response) => {
             if (response.has(questionId)) {
