@@ -59,7 +59,13 @@ export class Survey {
     return this.responseCodes.getCodesForQuestion(question.QuestionId);
   }
 
-
+  public renameCodeForQuestion(question: SurveyQuestion, oldCodeName: string, newCodeName: string): void {
+    this.responseCodes.renameCodeForQuestion(question.QuestionId, oldCodeName, newCodeName);
+  }
+  
+  public mergeCodesForQuestion(question: SurveyQuestion, codeToDelete: string, codeToKeep: string): void {
+    this.responseCodes.mergeCodesForQuestion(question.QuestionId, codeToDelete, codeToKeep);
+  }
 
   constructor(questions: SurveyQuestion[]) {
     this.responseCodes = new SurveyResponseCodes();

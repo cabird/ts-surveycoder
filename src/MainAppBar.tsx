@@ -38,91 +38,47 @@ function MainAppBar(props: MainAppBarProps) {
 
     return (
 
-            <AppBar position="relative">
-                <Toolbar>
-                    
-                    <IconButton
-                        size="large"
-                        edge="start"
-                        color="inherit"
-                        aria-label="menu"
-                        sx={{ mr: 2, flexGrow: 0 }}
-                        
-                        onClick={handleClick}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Menu
-                        id="basic-menu"
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleClose}
-                        MenuListProps={{
-                            'aria-labelledby': 'basic-button',
-                        }}
-                    >
-                        {
+        <AppBar position="relative">
+            <Toolbar>
 
-                            props.menuItems.map((item) => {
-                                return (
-                                    <MenuItem key={item} id={item} onClick={handleSelected}>{item}</MenuItem>
-                                );
-                            })
-                        }
-                    </Menu>
-                    <Typography variant="h4" component="div" sx={{ flexGrow: 1 }}>
-                        SurveyCoder
-                    </Typography>
+                <IconButton
+                    size="large"
+                    edge="start"
+                    color="inherit"
+                    aria-label="menu"
+                    sx={{ mr: 2, flexGrow: 0 }}
+                    onClick={handleClick}
+                >
+                    <MenuIcon />
+                </IconButton>
+                <Menu
+                    id="basic-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleClose}
+                    MenuListProps={{
+                        'aria-labelledby': 'basic-button',
+                    }}
+                >
+                    {
 
-                </Toolbar>
-            </AppBar>
+                        props.menuItems.map((item) => {
+                            return (
+                                <MenuItem key={item} id={item} onClick={handleSelected}>{item}</MenuItem>
+                            );
+                        })
+                    }
+                </Menu>
+                <Typography variant="h4" component="div" sx={{ flexGrow: 1 }}>
+                    SurveyCoder
+                </Typography>
+
+            </Toolbar>
+        </AppBar>
 
 
     );
 }
-/*
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        News
-                    </Typography>
-                    <Button color="inherit">Login</Button>
-                    
 
-                    <Box sx={{ flexGrow: 1, width: 1000 }}>
-                    <AppBar position="relative">
-                        <Toolbar>
-                            <IconButton
-                                size="large"
-                                edge="start"
-                                color="inherit"
-                                aria-label="menu"
-                                sx={{ mr: 2 }}
-                                onClick={handleClick}
-                            >
-                                <MenuIcon />
-                            </IconButton>
-                            <Menu
-                                id="basic-menu"
-                                anchorEl={anchorEl}
-                                open={open}
-                                onClose={handleClose}
-                                MenuListProps={{
-                                    'aria-labelledby': 'basic-button',
-                                }}
-                            >
-                                {
-        
-                                    props.menuItems.map((item) => {
-                                        return (
-                                            <MenuItem key={item} id={item} onClick={handleSelected}>{item}</MenuItem>
-                                        );
-                                    })
-                                }
-                            </Menu>
-                            <Typography variant="h4" component="div" sx={{ flexGrow: 1 }}>
-                                SurveyCoder
-                            </Typography>
-        
-                        </Toolbar>
-                    </AppBar>
-                </Box> */
+                 
 export default MainAppBar;

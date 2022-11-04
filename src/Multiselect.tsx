@@ -12,14 +12,24 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { ConstructionOutlined } from '@mui/icons-material';
 
+
+export enum CodesContextMenuItems {
+  Rename = "rename",
+  Merge = "merge"
+}
+
 interface MultiselectProps {
   codeSet: Array<string>;
   selectedCodes: Array<string>;
   onToggleCode: (code: string) => void;
   onCodeSetChanged: (codes: Array<string>) => void;
+  onContextMenuClicked: (contextMenuItem: CodesContextMenuItems, code: string) => void;
 };
 
-function Multiselect(props: MultiselectProps) {
+
+
+
+export function Multiselect(props: MultiselectProps) {
 
   const [contextMenu, setContextMenu] = React.useState<{
     mouseX: number;
@@ -46,10 +56,11 @@ function Multiselect(props: MultiselectProps) {
   };
 
   
-  const handleContextMenuClick = (menuItemId: string, event: React.MouseEvent) => {
-    console.log("handleClick " + menuItemId);
-    if (menuItemId != "") {
-      console.log("handleClick " + menuItemId + " on code " + rightClickedCode);
+  const handleContextMenuClick = (contextMenuItem: CodesContextMenuItems, event: React.MouseEvent) => {
+    console.log("handleClick " + contextMenuItem);
+    if (rightClickedCode != "") {
+      console.log("ContextMenu handleClick " + contextMenuItem + " on code " + rightClickedCode);
+      props.onContextMenuClicked(contextMenuItem, rightClickedCode);
     }
     setContextMenu(null);
   }
@@ -115,8 +126,8 @@ function Multiselect(props: MultiselectProps) {
                   : undefined
               }
               >
-                <MenuItem key="rename" id="rename" onClick={(e) => handleContextMenuClick("rename", e)}>Rename</MenuItem>
-                <MenuItem key="merge" id="merge" onClick={(e) => handleContextMenuClick("merge", e)}>Merge into other code</MenuItem>
+                <MenuItem key="rename" id="rename" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Rename, e)}>Rename</MenuItem>
+                <MenuItem key="merge" id="merge" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Merge, e)}>Merge into other code</MenuItem>
               </Menu>
           </List>
         </Box>

@@ -89,4 +89,32 @@ export class SurveyResponseCodes {
         return codes;
     }
 
+    public renameCodeForQuestion(questionId: string, oldCode: string, newCode: string) {
+        const codes: string[] = this.questionCodes.get(questionId)!;
+        if (codes.includes(newCode)) {
+            codes.splice(codes.indexOf(oldCode), 1);
+        } else
+        {
+            codes[codes.indexOf(oldCode)] = newCode;
+        }
+        this.questionCodes.set(questionId, codes);
+        
+        this.responseCodes.forEach((response) => {
+            if (response.has(questionId)) {
+                const responseCodes = response.get(questionId)!;
+                if (responseCodes.includes(newCode)) {
+                    responseCodes.splice(responseCodes.indexOf(oldCode), 1);
+                } else
+                {
+                    responseCodes[responseCodes.indexOf(oldCode)] = newCode;
+                }
+                response.set(questionId, responseCodes);
+            }
+        });
+    }
+
+    public mergeCodesForQuestion(questionId: string, codeToDelete: string, codeToKeep: string) {
+        this.renameCodeForQuestion(questionId, codeToDelete, codeToKeep);
+    }
+
 }

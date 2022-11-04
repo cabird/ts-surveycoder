@@ -10,7 +10,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 //import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MyDropzone from './MyDropzone';
-import Multiselect from './Multiselect';
+import { Multiselect, CodesContextMenuItems} from './Multiselect';
 import { Survey, SurveyQuestion } from './SurveyData/Survey';
 import { SurveyResponse } from './SurveyData/SurveyResponse';
 import QuestionSelect from './QuestionSelect';
@@ -23,6 +23,8 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Grid from '@mui/material/Unstable_Grid2';
 import Stack from '@mui/material/Stack';
+import RenameDialog from './RenameDialog';
+import MergeCodesDialog from './MergeCodesDialog';
 
 interface AppProps {
   name: string;
@@ -33,8 +35,12 @@ interface AppState {
   curQuestion?: SurveyQuestion;
   curSecondaryQuestion?: SurveyQuestion;
   curResponse?: SurveyResponse;
-  codeSet: Array<string>;
-  selectedCodes: Array<string>;
+  codeSet: string[];
+  selectedCodes: string[];
+  renameDialogOpen: boolean;
+  renameCode: string;
+  mergeCodesDialogOpen: boolean;
+  mergeCode: string;
 }
 
 enum QuestionDirection {
@@ -58,7 +64,11 @@ class App extends React.Component<AppProps, AppState> {
       curSecondaryQuestion: undefined,
       curResponse: undefined,
       codeSet: [],
-      selectedCodes: []
+      selectedCodes: [],
+      renameDialogOpen: false,
+      renameCode: "",
+      mergeCodesDialogOpen: false,
+      mergeCode: "",
     };
   }
 
@@ -76,6 +86,7 @@ class App extends React.Component<AppProps, AppState> {
   private updateUIFromSurvey = (survey: Survey): void => {
     console.log("updateUIFromSurvey");
     this.setState({
+      ...this.state,
       survey: survey,
       curQuestion: survey.Questions[0],
       curResponse: survey.Responses[0],
@@ -89,7 +100,7 @@ class App extends React.Component<AppProps, AppState> {
       const newQuestion = this.state.survey.Questions.find((q) => q.QuestionId === event.target.value);
       if (newQuestion) {
         if (whichQuestion === WhichQuestion.Primary) {
-          this.setState({ ...this.state, curQuestion: newQuestion });
+          this.setState({ ...this.state, curQuestion: newQuestion }, this.updateCodeState);
         } else {
           this.setState({ ...this.state, curSecondaryQuestion: newQuestion });
         }
@@ -108,14 +119,18 @@ class App extends React.Component<AppProps, AppState> {
 
     //stay within bounds
     if (newResponseIndex >= 0 && newResponseIndex < this.state.survey.Responses.length) {
-      const curReponse = this.state.survey.Responses[newResponseIndex];
+      console.log("Changing to response " + (newResponseIndex + 1));
+      const curResponse = this.state.survey.Responses[newResponseIndex];
       this.setState({
         ...this.state,
-        curResponse: curReponse,
-      });
+        curResponse: curResponse,
+      }, this.updateCodeState);
     }
   }
 
+  // call this whenever the codes in the code list need to change, either because the list of codes changed
+  // or the subset of selected codes changed.  This looks at the current response and question in the state,
+  // so be sure to pass this as an arg to setState if you're changing those.
   private updateCodeState = () => {
     if (this.isSurveyLoaded()) {
       const selectedCodes = this.state.survey?.getCodesForResponseAndQuestion(this.state!.curResponse!, this.state!.curQuestion!);
@@ -187,18 +202,81 @@ class App extends React.Component<AppProps, AppState> {
       //const blob = new Blob([contents], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
       //convert binary string to blob
 
-      const blob = new Blob([contents], { type: "application/vnd.ms-excel" });
+      /* const blob = new Blob([contents], { type: "application/vnd.ms-excel" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'survey.xlsx');
       document.body.appendChild(link);
-      link.click();
+      link.click(); */
     }
   }
 
 
+  private handleCodesContextMenuClicked = (contextMenuItem: CodesContextMenuItems, code: string) => {
+    console.log("handleCodesContextMenuClicked: " + contextMenuItem + " " + code);
+    if (!this.isSurveyLoaded()) return;
+    switch (contextMenuItem) {
+      case CodesContextMenuItems.Rename:
+        //this.renameCode(code);
+        this.setState({
+          ...this.state,
+          renameDialogOpen: true,
+          renameCode: code
+        });
+        break;
+      case CodesContextMenuItems.Merge:
+        this.setState({
+          ...this.state,
+          mergeCodesDialogOpen: true,
+          mergeCode: code
+        });
+        //this.mergeCode(code);
+        break;
+    }
+  }
 
+  /*private renameCode = (oldCodeName: string) => {
+    console.log("renameCode: " + oldCodeName);
+    if (this.isSurveyLoaded()) {
+      this.setState({
+        ...this.state,
+        renameDialogOpen: true,
+        renameCode: oldCodeName
+      });
+    }
+  }*/
+  
+  private handleRenameDialogClose = (action: string, newCodeName: string) => {
+    console.log("handleRenameDialogClose: " + action + " " + newCodeName);
+    if (action === "ok" && this.isSurveyLoaded()) {
+      console.log("renaming code " + this.state.renameCode + " to " + newCodeName);
+      this.state.survey!.renameCodeForQuestion(this.state.curQuestion!, this.state.renameCode!, newCodeName);
+    } else {
+      console.log("canceling rename");
+    }
+    this.setState({
+      ...this.state,
+      renameDialogOpen: false,
+      renameCode: ""
+    }, this.updateCodeState);
+  }
+
+  private handleMergeCodesDialogClose = (action: string, codeToMergeInto: string) => {
+    console.log("handleMergeCodesDialogClose: " + action + " " + codeToMergeInto);
+    if (action === "ok" && this.isSurveyLoaded()) {
+      console.log("merging code " + this.state.mergeCode + " into " + codeToMergeInto);
+      this.state.survey!.mergeCodesForQuestion(this.state.curQuestion!, this.state.mergeCode!, codeToMergeInto);
+    } else {
+      console.log("canceling merge");
+    }
+    this.setState({
+      ...this.state,
+      mergeCodesDialogOpen: false,
+      mergeCode: ""
+    }, this.updateCodeState);
+  }
+  
 
 
   render() {
@@ -220,21 +298,14 @@ class App extends React.Component<AppProps, AppState> {
     console.log("there are " + questionOptions.length + " questions2");
     console.log("current response id is " + this.state.curResponse?.ResponseId);
 
-    let codes: string[] = [];
-    let selectedCodes: string[] = [];
+    //let codes: string[] = [];
+    //let selectedCodes: string[] = [];
 
     let responseNumString = "Response: "
     let questionString = "Question ID: ";
     if (this.state.survey != undefined) {
       responseNumString += this.state.curResponse?.ResponseNumber + " of " + this.state.survey.Responses.length;
       questionString += this.state.curQuestion?.QuestionId;
-    }
-
-    // get the codes for this response for this question
-    if (this.state.curQuestion != undefined && this.state.curResponse != undefined) {
-      selectedCodes = this.state.survey?.ResponseCodes.getCodesForResponseAndQuestion(
-        this.state.curResponse.ResponseId, this.state.curQuestion.QuestionId) || [];
-      codes = this.state.survey?.ResponseCodes.getCodesForQuestion(this.state.curQuestion.QuestionId) || [];
     }
 
     return (
@@ -304,12 +375,28 @@ class App extends React.Component<AppProps, AppState> {
           </Grid>
           <Grid xs={3}>
             <Multiselect
-              codeSet={codes}
-              selectedCodes={selectedCodes}
+              key={this.state.curResponse?.ResponseId + "::" + this.state.curQuestion?.QuestionId}
+              codeSet={this.state.codeSet}
+              selectedCodes={this.state.selectedCodes}
               onToggleCode={this.toggleCode}
-              onCodeSetChanged={this.onCodeSetChanged} />
+              onCodeSetChanged={this.onCodeSetChanged} 
+              onContextMenuClicked={this.handleCodesContextMenuClicked}
+              />
           </Grid>
         </Grid>
+        <RenameDialog 
+          key={"Rename::" + this.state.curQuestion?.QuestionId + "::" + this.state.renameCode} 
+          open={this.state.renameDialogOpen} 
+          onClose={this.handleRenameDialogClose} 
+          oldCodeName={this.state.renameCode}  
+        />
+        <MergeCodesDialog
+          key={"Merge::" + this.state.curQuestion?.QuestionId + "::" + this.state.mergeCode} 
+          open={this.state.mergeCodesDialogOpen}
+          onClose={this.handleMergeCodesDialogClose}
+          codeSet={this.state.codeSet}
+          oldCodeName={this.state.mergeCode}
+        />
       </div>
     );
   }
