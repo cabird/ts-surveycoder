@@ -133,7 +133,7 @@ export class Survey {
 
     //read the column names and text
     for (let i = 0; i < data[headerRow].length; i++) {
-      questions.push(new SurveyQuestion(data[headerRow][i].toString(), data[textRow][i].toString()));
+      
     }
 
     /* grab the headers and the text, paying special attention to the code columns */
@@ -146,6 +146,7 @@ export class Survey {
       if (colName.endsWith("-codes")) continue;
       columnNames.push(colName);
       columnTexts.push(data[textRow][i].toString());
+      questions.push(new SurveyQuestion(colName, data[textRow][i].toString()));
     }
 
     
