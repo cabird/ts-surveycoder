@@ -31,6 +31,7 @@ interface AppProps {
 interface AppState {
   survey?: Survey;
   curQuestion?: SurveyQuestion;
+  curSecondaryQuestion?: SurveyQuestion;
   curResponse?: SurveyResponse;
   codeSet: Array<string>;
   selectedCodes: Array<string>;
@@ -41,6 +42,11 @@ enum QuestionDirection {
   Next
 }
 
+enum WhichQuestion {
+  Primary,
+  Secondary
+}
+
 class App extends React.Component<AppProps, AppState> {
 
 
@@ -49,13 +55,12 @@ class App extends React.Component<AppProps, AppState> {
     this.state = {
       survey: undefined,
       curQuestion: undefined,
+      curSecondaryQuestion: undefined,
       curResponse: undefined,
       codeSet: [],
       selectedCodes: []
     };
   }
-
-
 
   private loadSurveyFromBlob = (fileBlob: Blob): void => {
     console.log("loadSurveyFromBlob");
@@ -74,19 +79,22 @@ class App extends React.Component<AppProps, AppState> {
       survey: survey,
       curQuestion: survey.Questions[0],
       curResponse: survey.Responses[0],
+      curSecondaryQuestion: survey.Questions[1]
     });
-    const qTexts = survey.Questions.map((q) => q.QuestionText);
-    console.log(qTexts.length + " questions");
-    //setQuestionOptions(qTexts);
   }
 
-  private handleQuestionChange = (event: SelectChangeEvent) => {
-    console.log("Question changed to " + event.target.value);
-    const curQuestion = this.state.survey?.QuestionFromQuestionId(event.target.value);
-    this.setState({
-      ...this.state,
-      curQuestion: curQuestion,
-    });
+  private handleQuestionChange = (whichQuestion: WhichQuestion, event: SelectChangeEvent) => {
+    console.log("Question " + whichQuestion + " changed to " + event.target.value);
+    if (this.state.survey) {
+      const newQuestion = this.state.survey.Questions.find((q) => q.QuestionId === event.target.value);
+      if (newQuestion) {
+        if (whichQuestion === WhichQuestion.Primary) {
+          this.setState({ ...this.state, curQuestion: newQuestion });
+        } else {
+          this.setState({ ...this.state, curSecondaryQuestion: newQuestion });
+        }
+      }
+    }
   }
 
   private ChangeResponse = (direction: QuestionDirection) => {
@@ -196,12 +204,17 @@ class App extends React.Component<AppProps, AppState> {
   render() {
     let questionOptions: SurveyQuestion[] = [];
     let surveyResponseText = "";
+    let surveySecondaryResponseText = "";
 
     if (this.state.survey != undefined) {
       questionOptions = this.state.survey.Questions;
       if (this.state.curQuestion != undefined && this.state.curResponse != undefined) {
         surveyResponseText = this.state.curResponse.GetAnswerForQuestion(this.state.curQuestion.QuestionId);
       }
+      if (this.state.curSecondaryQuestion != undefined && this.state.curResponse != undefined) {
+        surveySecondaryResponseText = this.state.curResponse.GetAnswerForQuestion(this.state.curSecondaryQuestion.QuestionId);
+      }
+
     }
 
     console.log("there are " + questionOptions.length + " questions2");
@@ -231,36 +244,63 @@ class App extends React.Component<AppProps, AppState> {
           <MyDropzone onFileDropped={this.loadSurveyFromBlob} />
         </div>
         <Grid container spacing={2} alignItems="stretch" sx={{ height: "100%", width: "95%", marginTop: 1, marginLeft: 1, marginRight: 1, marginBottom: 1 }}>
-          <Grid >
-            <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Previous)}>
-              <ArrowBackIcon />
-            </Button>
-          </Grid>
-          <Grid >
-            <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Next)}>
-              <ArrowForwardIcon />
-            </Button>
-          </Grid>
-          <Grid xs>
-            <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
-              <div>{responseNumString}</div>
-              <div>{questionString}</div>
-            </Stack>
-          </Grid>
-          <Grid xs={12} sx={{ height: "100%" }}>
-            <QuestionSelect options={questionOptions} handleChange={this.handleQuestionChange} />
-          </Grid>
-          <Grid xs={9} sx={{height: "100%"}} >
-            <TextField
-              id="survey-response-text"
-              label="response"
-              multiline
-              variant="outlined"
-              value={surveyResponseText}
-              minRows={10}
-              inputProps={{ readOnly: true, height: "100%" }}
-              style={{ width: "100%", height: "100%" }}
-            />
+          <Grid xs={9}>
+            <Grid container spacing={2} alignItems="stretch" sx={{ height: "100%", width: "100%", marginTop: 1, marginLeft: 1, marginRight: 1, marginBottom: 1 }}>
+              <Grid >
+                <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Previous)}>
+                  <ArrowBackIcon />
+                </Button>
+              </Grid>
+              <Grid >
+                <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Next)}>
+                  <ArrowForwardIcon />
+                </Button>
+              </Grid>
+              <Grid xs>
+                <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
+                  <div>{responseNumString}</div>
+                  <div>{questionString}</div>
+                </Stack>
+              </Grid>
+              <Grid xs={12} >
+                <QuestionSelect
+                selectedQuestionId={this.state.curQuestion?.QuestionId || ""}
+                label="Question" 
+                options={questionOptions} 
+                handleChange={(e) => this.handleQuestionChange(WhichQuestion.Primary, e)} />
+              </Grid>
+              <Grid xs={12} >
+                <TextField
+                  id="survey-response-text"
+                  label="response"
+                  multiline
+                  variant="outlined"
+                  value={surveyResponseText}
+                  minRows={10}
+                  inputProps={{ readOnly: true, height: "100%" }}
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </Grid>
+              <Grid xs={12} >
+                <QuestionSelect 
+                selectedQuestionId={this.state.curSecondaryQuestion?.QuestionId || ""}
+                label="Secondary Question" 
+                options={questionOptions} 
+                handleChange={(e) => this.handleQuestionChange(WhichQuestion.Secondary, e)} />
+              </Grid>
+              <Grid xs={12} sx={{height: "100%"}} >
+                <TextField
+                  id="survey-response-text"
+                  label="response"
+                  multiline
+                  variant="outlined"
+                  value={surveySecondaryResponseText}
+                  minRows={10}
+                  inputProps={{ readOnly: true, height: "100%" }}
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </Grid>
+            </Grid>
           </Grid>
           <Grid xs={3}>
             <Multiselect
@@ -270,7 +310,6 @@ class App extends React.Component<AppProps, AppState> {
               onCodeSetChanged={this.onCodeSetChanged} />
           </Grid>
         </Grid>
-
       </div>
     );
   }

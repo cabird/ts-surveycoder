@@ -8,6 +8,9 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Unstable_Grid2';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { ConstructionOutlined } from '@mui/icons-material';
 
 interface MultiselectProps {
   codeSet: Array<string>;
@@ -17,6 +20,41 @@ interface MultiselectProps {
 };
 
 function Multiselect(props: MultiselectProps) {
+
+  const [contextMenu, setContextMenu] = React.useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
+
+  const [rightClickedCode, setRightClickedCode] = useState<string>("");
+
+  const handleContextMenu = (code: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    console.log("handleContextMenu: code is " + code);
+    setRightClickedCode(code);
+    setContextMenu(
+      contextMenu === null
+        ? {
+            mouseX: event.clientX + 2,
+            mouseY: event.clientY - 6,
+          }
+        : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
+          // Other native context menus might behave different.
+          // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
+          null,
+    );
+  };
+
+  
+  const handleContextMenuClick = (menuItemId: string, event: React.MouseEvent) => {
+    console.log("handleClick " + menuItemId);
+    if (menuItemId != "") {
+      console.log("handleClick " + menuItemId + " on code " + rightClickedCode);
+    }
+    setContextMenu(null);
+  }
+
+
 
   const [newCodeValue, setNewCodeValue] = useState<string>("");
 
@@ -59,12 +97,27 @@ function Multiselect(props: MultiselectProps) {
         <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray' }}>
           <List component="nav" aria-label="Code List" sx={{ minHeight: 600 }} >
             {props.codeSet.map((code) => (
-              <ListItemButton key={code} sx={{ height: 24 }}
+              <ListItemButton 
+                onContextMenu={(e) => handleContextMenu(code, e)} 
+                key={code} 
+                sx={{ height: 24 }}
                 selected={props.selectedCodes.indexOf(code) !== -1}
                 onClick={() => toggleCode(code)}>
                 <ListItemText primary={code} />
               </ListItemButton>
             ))}
+            <Menu 
+              open={contextMenu !== null}
+              anchorReference = "anchorPosition"
+              anchorPosition={
+                contextMenu !== null
+                  ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                  : undefined
+              }
+              >
+                <MenuItem key="rename" id="rename" onClick={(e) => handleContextMenuClick("rename", e)}>Rename</MenuItem>
+                <MenuItem key="merge" id="merge" onClick={(e) => handleContextMenuClick("merge", e)}>Merge into other code</MenuItem>
+              </Menu>
           </List>
         </Box>
       </Grid>

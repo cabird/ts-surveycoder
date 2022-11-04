@@ -8,11 +8,13 @@ import { SurveyQuestion } from './SurveyData/Survey';
 import Divider from '@mui/material/Divider';
 
 interface QuestionSelectProps {
+    selectedQuestionId: string;
     options: SurveyQuestion[];
     handleChange: (event: SelectChangeEvent) => void;
+    label: string;
 }
 
-const ITEM_HEIGHT = 20;
+const ITEM_HEIGHT = 40;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
     PaperProps: {
@@ -24,7 +26,7 @@ const MenuProps = {
 };
 
 export default function QuestionSelect(props: QuestionSelectProps) {
-    const [question, setQuestion] = React.useState(props.options.length > 0 ? props.options[0].QuestionId : '');
+    const [question, setQuestion] = React.useState(props.selectedQuestionId);
 
     const handleChange = (event: SelectChangeEvent) => {
         setQuestion(event.target.value as string);
@@ -34,7 +36,7 @@ export default function QuestionSelect(props: QuestionSelectProps) {
     return (
         <Box sx={{ minWidth: 12 }}>
             <FormControl fullWidth>
-                <InputLabel id="question-select-label">Question</InputLabel>
+                <InputLabel id="question-select-label">{props.label}</InputLabel>
                 <Select
                     labelId="demo-simple-select-label"
                     id="demo-simple-select"
