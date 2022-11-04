@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Unstable_Grid2';
 
 interface MultiselectProps {
   codeSet: Array<string>;
@@ -48,14 +48,14 @@ function Multiselect(props: MultiselectProps) {
   props.codeSet.sort();
   return (
     <Grid container spacing={2}>
-      <Grid item xs={9} style={{ width: "100%" }}>
+      <Grid xs style={{ width: "100%" }}>
         <TextField style={{ width: "100%" }} variant='outlined' value={newCodeValue} label='Add a code' onChange={onNewCodeChange} 
         onKeyPress={handleKeyPress}/>
       </Grid>
-      <Grid item xs={3}>
+      <Grid>
         <Button variant='contained' style={{ height: "100%"}} onClick={addNewCode} >Add</Button>
       </Grid>
-      <Grid item xs={12}>
+      <Grid xs={12}>
         <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray' }}>
           <List component="nav" aria-label="Code List" sx={{ minHeight: 600 }} >
             {props.codeSet.map((code) => (

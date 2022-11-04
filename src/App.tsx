@@ -21,7 +21,7 @@ import Box from '@mui/material/Box';
 import { IconButton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Unstable_Grid2';
 import Stack from '@mui/material/Stack';
 
 interface AppProps {
@@ -211,10 +211,10 @@ class App extends React.Component<AppProps, AppState> {
     let selectedCodes: string[] = [];
 
     let responseNumString = "Response: "
-    let questionString = "Question: ";
+    let questionString = "Question ID: ";
     if (this.state.survey != undefined) {
       responseNumString += this.state.curResponse?.ResponseNumber + " of " + this.state.survey.Responses.length;
-      questionString += this.state.curQuestion?.QuestionText;
+      questionString += this.state.curQuestion?.QuestionId;
     }
 
     // get the codes for this response for this question
@@ -230,27 +230,27 @@ class App extends React.Component<AppProps, AppState> {
         <div>
           <MyDropzone onFileDropped={this.loadSurveyFromBlob} />
         </div>
-
-
-        <div>{responseNumString}</div>
-        <div>{questionString}</div>
-
         <Grid container spacing={2} alignItems="stretch" sx={{ height: "100%", width: "95%", marginTop: 1, marginLeft: 1, marginRight: 1, marginBottom: 1 }}>
-          <Grid item xs={1} >
-            <Button variant="contained" sx={{ height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Previous)}>
+          <Grid >
+            <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Previous)}>
               <ArrowBackIcon />
             </Button>
           </Grid>
-          <Grid item xs={1} >
-            <Button variant="contained" sx={{ height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Next)}>
+          <Grid >
+            <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => this.ChangeResponse(QuestionDirection.Next)}>
               <ArrowForwardIcon />
             </Button>
           </Grid>
-          <Grid item xs={7} sx={{ height: "100%" }}>
+          <Grid xs>
+            <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
+              <div>{responseNumString}</div>
+              <div>{questionString}</div>
+            </Stack>
+          </Grid>
+          <Grid xs={12} sx={{ height: "100%" }}>
             <QuestionSelect options={questionOptions} handleChange={this.handleQuestionChange} />
           </Grid>
-
-          <Grid item xs={9} sx={{height: "100%"}} >
+          <Grid xs={9} sx={{height: "100%"}} >
             <TextField
               id="survey-response-text"
               label="response"
@@ -261,9 +261,8 @@ class App extends React.Component<AppProps, AppState> {
               inputProps={{ readOnly: true, height: "100%" }}
               style={{ width: "100%", height: "100%" }}
             />
-
           </Grid>
-          <Grid item xs={3}>
+          <Grid xs={3}>
             <Multiselect
               codeSet={codes}
               selectedCodes={selectedCodes}

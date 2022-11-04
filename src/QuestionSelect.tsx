@@ -4,7 +4,7 @@ import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import {SurveyQuestion} from './SurveyData/Survey';
+import { SurveyQuestion } from './SurveyData/Survey';
 import Divider from '@mui/material/Divider';
 
 interface QuestionSelectProps {
@@ -12,15 +12,15 @@ interface QuestionSelectProps {
     handleChange: (event: SelectChangeEvent) => void;
 }
 
-const ITEM_HEIGHT = 48;
+const ITEM_HEIGHT = 20;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 400,
+    PaperProps: {
+        style: {
+            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+            width: 400,
+        },
     },
-  },
 };
 
 export default function QuestionSelect(props: QuestionSelectProps) {
@@ -33,28 +33,26 @@ export default function QuestionSelect(props: QuestionSelectProps) {
 
     return (
         <Box sx={{ minWidth: 12 }}>
-        <FormControl fullWidth>
-            <InputLabel id="question-select-label">Question</InputLabel>
-            <Select
-
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={question}
-            label="Question"
-            onChange={handleChange}
-            
-            MenuProps={MenuProps}
-            >
-            {props.options.map((option) => (
-                <MenuItem 
-                    style={{whiteSpace: 'normal'}}
-                    value={option.QuestionId} 
-                    key={option.QuestionId}>
-                        {option.QuestionText}
-                </MenuItem>
-            ))}
-            </Select>
-        </FormControl>
+            <FormControl fullWidth>
+                <InputLabel id="question-select-label">Question</InputLabel>
+                <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    value={question}
+                    label="Question"
+                    onChange={handleChange}
+                    MenuProps={MenuProps}
+                >
+                    {props.options.map((option) => (
+                        <MenuItem
+                            style={{ whiteSpace: 'normal' }}
+                            value={option.QuestionId}
+                            key={option.QuestionId}>
+                            {option.QuestionText}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
         </Box>
     );
 }
