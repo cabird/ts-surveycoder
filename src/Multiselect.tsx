@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
+import { makeStyles, withStyles } from '@mui/material';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
@@ -11,7 +12,7 @@ import Grid from '@mui/material/Unstable_Grid2';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { ConstructionOutlined } from '@mui/icons-material';
-
+import './Multiselect.css';
 
 export enum CodesContextMenuItems {
   Rename = "rename",
@@ -25,9 +26,6 @@ interface MultiselectProps {
   onCodeSetChanged: (codes: Array<string>) => void;
   onContextMenuClicked: (contextMenuItem: CodesContextMenuItems, code: string) => void;
 };
-
-
-
 
 export function Multiselect(props: MultiselectProps) {
 
@@ -55,7 +53,6 @@ export function Multiselect(props: MultiselectProps) {
     );
   };
 
-  
   const handleContextMenuClick = (contextMenuItem: CodesContextMenuItems, event: React.MouseEvent) => {
     console.log("handleClick " + contextMenuItem);
     if (rightClickedCode != "") {
@@ -64,8 +61,6 @@ export function Multiselect(props: MultiselectProps) {
     }
     setContextMenu(null);
   }
-
-
 
   const [newCodeValue, setNewCodeValue] = useState<string>("");
 
@@ -111,7 +106,10 @@ export function Multiselect(props: MultiselectProps) {
               <ListItemButton 
                 onContextMenu={(e) => handleContextMenu(code, e)} 
                 key={code} 
-                sx={{ height: 24 }}
+                sx={{ height: 24,
+                  '&.Mui-selected': {backgroundColor: '#1976d2', color: 'white'},
+                  '&.Mui-selected:hover': {backgroundColor: '#1976d2dd', color: 'white'},
+                }}
                 selected={props.selectedCodes.indexOf(code) !== -1}
                 onClick={() => toggleCode(code)}>
                 <ListItemText primary={code} />

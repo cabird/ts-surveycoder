@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import './App.css';
-import { Student, AppName, Level } from './interfaces';
-//import {DisplayData } from './DisplayData';
-//import {studentList, coursesList} from "./data";
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
-//import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MyDropzone from './MyDropzone';
 import { Multiselect, CodesContextMenuItems} from './Multiselect';
@@ -91,7 +87,7 @@ class App extends React.Component<AppProps, AppState> {
       curQuestion: survey.Questions[0],
       curResponse: survey.Responses[0],
       curSecondaryQuestion: survey.Questions[1]
-    });
+    }, this.updateCodeState);
   }
 
   private handleQuestionChange = (whichQuestion: WhichQuestion, event: SelectChangeEvent) => {
@@ -134,12 +130,15 @@ class App extends React.Component<AppProps, AppState> {
   private updateCodeState = () => {
     if (this.isSurveyLoaded()) {
       const selectedCodes = this.state.survey?.getCodesForResponseAndQuestion(this.state!.curResponse!, this.state!.curQuestion!);
+      const sortedSelectedCodes = selectedCodes?.slice();
       const codeSet = this.state.survey?.getCodesForQuestion(this.state!.curQuestion!);
       console.log("updateCodeState: code set is " + codeSet);
+      console.log("updateCodeState: selected codes are " + selectedCodes);
+      console.log("response id is " + this.state.curResponse?.ResponseId);
       this.setState({
         ...this.state,
-        selectedCodes: selectedCodes!,
-        codeSet: codeSet!
+        selectedCodes: selectedCodes!.slice(),
+        codeSet: codeSet!.slice()
       });
     }
   }
@@ -171,14 +170,13 @@ class App extends React.Component<AppProps, AppState> {
     console.log("new code set is", codeSet);
     if (this.isSurveyLoaded()) {
       const oldSelectedCodes = this.state.survey!.getCodesForResponseAndQuestion(this.state.curResponse!, this.state.curQuestion!);
-
       const oldCodeSet = this.state.survey!.getCodesForQuestion(this.state.curQuestion!);
 
       // get the codes that are in codeSet but not in oldCodeSet
       const addedCodes = codeSet.filter((c) => !oldCodeSet.includes(c));
       // now add these new codes to the currently set codes for this question for this response
       const newSelectedCodes = [...oldSelectedCodes, ...addedCodes];
-
+      console.log("new selected codes are", newSelectedCodes, "old selected codes were", oldSelectedCodes, "for response number ", this.state.curResponse!.ResponseNumber);
       this.state.survey!.setCodesForResponseAndQuestion(this.state.curResponse!, this.state.curQuestion!, newSelectedCodes);
     }
     this.updateCodeState();
@@ -292,14 +290,10 @@ class App extends React.Component<AppProps, AppState> {
       if (this.state.curSecondaryQuestion != undefined && this.state.curResponse != undefined) {
         surveySecondaryResponseText = this.state.curResponse.GetAnswerForQuestion(this.state.curSecondaryQuestion.QuestionId);
       }
-
     }
 
     console.log("there are " + questionOptions.length + " questions2");
     console.log("current response id is " + this.state.curResponse?.ResponseId);
-
-    //let codes: string[] = [];
-    //let selectedCodes: string[] = [];
 
     let responseNumString = "Response: "
     let questionString = "Question ID: ";

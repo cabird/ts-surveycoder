@@ -28,6 +28,12 @@ const MenuProps = {
 export default function QuestionSelect(props: QuestionSelectProps) {
     const [question, setQuestion] = React.useState(props.selectedQuestionId);
 
+    // check if the selected question is in the list of options
+    // if not, set the question to the first option
+    if (props.options.findIndex((q) => q.QuestionId === question) === -1) {
+        setQuestion(props.options[0].QuestionId);
+    }
+
     const handleChange = (event: SelectChangeEvent) => {
         setQuestion(event.target.value as string);
         props.handleChange(event);

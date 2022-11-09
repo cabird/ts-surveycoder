@@ -8,7 +8,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <App name = "Student App"/>
+    <App name = "Survey Coder"/>
   </React.StrictMode>
 );
 

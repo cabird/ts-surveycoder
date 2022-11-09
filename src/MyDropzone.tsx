@@ -1,17 +1,16 @@
 import React, {useCallback, useMemo} from 'react';
 import {useDropzone} from 'react-dropzone';
 
-// @deno-types="https://cdn.sheetjs.com/xlsx-0.19.0/package/types/index.d.ts"
-import { read, utils, writeFileXLSX } from 'xlsx';
-
 const baseStyle = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '20px',
-    borderWidth: 2,
-    borderRadius: 2,
+    padding: '10px',
+    // add a top margin to avoid overlap with the header
+    marginTop: '20px',
+    borderWidth: 3,
+    borderRadius: 4,
     borderColor: '#eeeeee',
     borderStyle: 'dashed',
     backgroundColor: '#fafafa',
@@ -79,7 +78,7 @@ function MyDropzone(props: any) {
         {
             isDragActive ?
                 <p>Drop the files here ...</p> :
-                <p>Drag 'n' drop some files here, or click to select files</p>
+                <p>Drop Survey Excel File here</p>
         }
         </div>
         </section>);

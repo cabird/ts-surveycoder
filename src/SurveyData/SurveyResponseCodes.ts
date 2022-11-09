@@ -20,40 +20,21 @@ export class SurveyResponseCodes {
 
     public addResponseCodeForResponseAndQuestion(responseId: string, questionId: string, responseCode: string) {
         const response = this.getResponseDict(responseId);
-        if (response.has(questionId)) {
-            response.get(questionId)?.push(responseCode);
-        } else {
-            response.set(questionId, [responseCode]);
-        }
+        const responseCodes = response.get(questionId) ?? [];
+        response.set(questionId, [...responseCodes, responseCode]);
 
-        // make sure that the set of question codes for this question has all the codes that were passed in.
-        // this makes it hard to delete a code from a question, but that's not a use case we need to support.
-        if (!this.questionCodes.has(questionId)) {
-            this.questionCodes.set(questionId, [responseCode]);
-        } else {
-            const codes = this.questionCodes.get(questionId);
-            if (!codes?.includes(responseCode)) {
-                codes?.push(responseCode);
-            }
-        }
+        const codes = this.questionCodes.get(questionId) ?? [];
+        const newCodeSet = codes.concat(responseCodes.filter((code) => !codes.includes(code)));
+        this.questionCodes.set(questionId, newCodeSet);
     }
 
     public setCodesForResponseAndQuestion(responseId: string, questionId: string, responseCodes: string[]) {
         const response = this.getResponseDict(responseId);
         response.set(questionId, responseCodes);
-        
-        // make sure that the set of question codes for this question has all the codes that were passed in.
-        // this makes it hard to delete a code from a question, but that's not a use case we need to support.
-        if (!this.questionCodes.has(questionId)) {
-            this.questionCodes.set(questionId, responseCodes);
-        } else {
-            const codes = this.questionCodes.get(questionId);
-            responseCodes.forEach((code) => {
-                if (!codes?.includes(code)) {
-                    codes?.push(code);
-                }
-            });
-        }
+
+        const codes = this.questionCodes.get(questionId) ?? [];
+        const newCodeSet = codes.concat(responseCodes.filter((code) => !codes.includes(code)));
+        this.questionCodes.set(questionId, newCodeSet);
     }
 
     public getCodesForResponseAndQuestion(responseId: string, questionId: string): string[] {
@@ -69,44 +50,29 @@ export class SurveyResponseCodes {
     }
 
     public getCodesForQuestion(questionId: string): string[] {
-
         if (this.questionCodes.has(questionId)) {
             return this.questionCodes.get(questionId)!;
         } else {
             return [];
         }
-
-        const codes: string[] = [];
-        this.responseCodes.forEach((response) => {
-            if (response.has(questionId)) {
-                response.get(questionId)?.forEach((code) => {
-                    if (!codes.includes(code)) {
-                        codes.push(code);
-                    }
-                });
-            }
-        });
-        return codes;
     }
 
     public renameCodeForQuestion(questionId: string, oldCode: string, newCode: string) {
         const codes: string[] = this.questionCodes.get(questionId)!;
-        if (codes.includes(newCode)) {
-            codes.splice(codes.indexOf(oldCode), 1);
-        } else
-        {
-            codes[codes.indexOf(oldCode)] = newCode;
-        }
-        this.questionCodes.set(questionId, codes);
+        //build a new code set consisting of all codes except the old code and the new code
+        const newCodes = codes.filter((code) => code !== oldCode && code !== newCode);
+        newCodes.push(newCode);
+        this.questionCodes.set(questionId, newCodes);
         
+        // now update all the responses
         this.responseCodes.forEach((response) => {
-            if (response.has(questionId)) {
-                const responseCodes = response.get(questionId)!;
-                if (responseCodes.includes(newCode)) {
-                    responseCodes.splice(responseCodes.indexOf(oldCode), 1);
-                } else
-                {
-                    responseCodes[responseCodes.indexOf(oldCode)] = newCode;
+            const responseCodes = response.get(questionId);
+            //we only need to do anything if the response has the old code for this question
+            if (responseCodes && responseCodes.includes(oldCode)) {
+                //remove the old code and then add the new code if it's not already in there (which is possible if the code already exists)
+                const newCodes = responseCodes.filter((code) => code !== oldCode);
+                if (!responseCodes.includes(newCode)) {
+                    newCodes.push(newCode);
                 }
                 response.set(questionId, responseCodes);
             }
