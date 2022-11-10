@@ -4,13 +4,18 @@ import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { SurveyQuestion } from './SurveyData/Survey';
-import Divider from '@mui/material/Divider';
+
+
+import { useCoderStore } from './CoderState';
+import shallow from 'zustand/shallow';
+
+export enum WhichQuestion {
+    Primary,
+    Secondary
+}
 
 interface QuestionSelectProps {
-    selectedQuestionId: string;
-    options: SurveyQuestion[];
-    handleChange: (event: SelectChangeEvent) => void;
+    whichQuestion: WhichQuestion;
     label: string;
 }
 
@@ -26,18 +31,31 @@ const MenuProps = {
 };
 
 export default function QuestionSelect(props: QuestionSelectProps) {
-    const [question, setQuestion] = React.useState(props.selectedQuestionId);
 
-    // check if the selected question is in the list of options
-    // if not, set the question to the first option
-    if (props.options.length > 0 && 
-        props.options.findIndex((q) => q.QuestionId === question) === -1) {
-                setQuestion(props.options[0].QuestionId);
-    }
+    const { survey, curQuestion, curSecondaryQuestion, setCurQuestion, setCurSecondaryQuestion } =
+        useCoderStore(state => ({
+            survey: state.survey,
+            curQuestion: state.curQuestion,
+            curSecondaryQuestion: state.curSecondaryQuestion,
+            setCurQuestion: state.setCurQuestion,
+            setCurSecondaryQuestion: state.setCurSecondaryQuestion
+        }), shallow);
 
     const handleChange = (event: SelectChangeEvent) => {
-        setQuestion(event.target.value as string);
-        props.handleChange(event);
+        const questionId = event.target.value as string;
+        const question = survey!.Questions.find((q) => q.QuestionId === questionId);
+        if (question && props.whichQuestion === WhichQuestion.Primary) {
+            setCurQuestion(question);
+        } else if (question && props.whichQuestion === WhichQuestion.Secondary) {
+            setCurSecondaryQuestion(question);
+        }
+    }
+
+    let curQuestionId = "";
+    if (props.whichQuestion === WhichQuestion.Primary) {
+        curQuestionId = curQuestion?.QuestionId || "";
+    } else {
+        curQuestionId = curSecondaryQuestion?.QuestionId || "";
     }
 
     return (
@@ -47,17 +65,17 @@ export default function QuestionSelect(props: QuestionSelectProps) {
                 <Select
                     labelId="demo-simple-select-label"
                     id="demo-simple-select"
-                    value={question}
+                    value={curQuestionId}
                     label="Question"
                     onChange={handleChange}
                     MenuProps={MenuProps}
                 >
-                    {props.options.map((option) => (
+                    {survey?.Questions.map((q) => (
                         <MenuItem
                             style={{ whiteSpace: 'normal' }}
-                            value={option.QuestionId}
-                            key={option.QuestionId}>
-                            {option.QuestionText}
+                            value={q.QuestionId}
+                            key={q.QuestionId}>
+                            {q.QuestionText}
                         </MenuItem>
                     ))}
                 </Select>

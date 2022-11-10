@@ -8,16 +8,27 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { InputLabel } from '@mui/material';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import { useCoderStore } from './CoderState';
+import shallow from 'zustand/shallow';
 
 interface MergeCodeDialogProps {
   open: boolean;
-  oldCodeName: string;
-  codeSet: Array<string>;
   onClose: (action: string, newCodeName: string) => void;
 }
 
 export default function MergeCodesDialog(props: MergeCodeDialogProps) {
-  const [value, setValue] = React.useState(props.codeSet[0]);
+  
+  const { rightClickedCode, survey, curQuestion } = useCoderStore((state) => ({
+    rightClickedCode: state.rightClickedCode,
+    survey: state.survey,
+    curQuestion: state.curQuestion,
+  }), shallow);
+  
+  const [value, setValue] = React.useState(rightClickedCode);
+
+  if (value === "" && rightClickedCode !== "") {
+    setValue(rightClickedCode);
+  }
 
   const handleClose = (action: string, event: React.MouseEvent) => {
     console.log("handleClose" + action);
@@ -25,8 +36,10 @@ export default function MergeCodesDialog(props: MergeCodeDialogProps) {
     setValue("")
   }
 
-  const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setValue(event.target.value as string);
+  let codeSet: string[] = [];
+  if (survey && curQuestion) {
+    codeSet = survey.getCodesForQuestion(curQuestion);
+    codeSet = codeSet.filter((code) => code !== rightClickedCode);
   }
 
   return (
@@ -35,8 +48,8 @@ export default function MergeCodesDialog(props: MergeCodeDialogProps) {
         <DialogTitle>Merge Codes</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Please select the code that you would like to merge code "{props.oldCodeName}" into.  All responses
-            with the code "{props.oldCodeName}" will be changed to the selected code.
+            Please select the code that you would like to merge code "{rightClickedCode}" into.  All responses
+            with the code "{rightClickedCode}" will be changed to the selected code.
           </DialogContentText>
           <InputLabel id="merge-code-label">Code to merge into</InputLabel>
           <Select
@@ -48,7 +61,7 @@ export default function MergeCodesDialog(props: MergeCodeDialogProps) {
             value={value}
             onChange={(event) => setValue(event.target.value)}
             >
-            {props.codeSet.map((code) => (
+            {codeSet.map((code) => (
               <MenuItem key={code} value={code}>{code}</MenuItem>
             ))}
           </Select>

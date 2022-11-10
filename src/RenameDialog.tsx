@@ -6,15 +6,22 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { useCoderStore } from './CoderState';
 
 interface RenameDialogProps {
   open: boolean;
-  oldCodeName: string;
   onClose: (action: string, newCodeName: string) => void;
 }
 
 export default function RenameDialog(props: RenameDialogProps) {
-  const [value, setValue] = React.useState(props.oldCodeName);
+
+  const rightClickedCode = useCoderStore(state => state.rightClickedCode);
+  
+  const [value, setValue] = React.useState(rightClickedCode);
+
+  if (value === "" && rightClickedCode !== "") {
+    setValue(rightClickedCode);
+  }
 
   const handleClose = (action: string, event: React.MouseEvent) => {
     console.log("handleClose" + action);
@@ -28,7 +35,7 @@ export default function RenameDialog(props: RenameDialogProps) {
         <DialogTitle>Rename Code</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Please enter the new name for the code "{props.oldCodeName}".
+            Please enter the new name for the code "{rightClickedCode}".
           </DialogContentText>
           <TextField
             autoFocus

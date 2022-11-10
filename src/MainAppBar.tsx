@@ -1,34 +1,26 @@
 import React from 'react';
 import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import { styled } from '@mui/material/styles';
-import Button from '@mui/material/Button';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { PropaneRounded } from '@mui/icons-material';
 
-export class MenuItemInfo
-{
+export class MenuItemInfo {
     id: string;
     label: string;
     //make a constructor that takes in the id and label
-    constructor(id: string, label: string = id)
-    {
+    constructor(id: string, label: string = id) {
         this.id = id;
         this.label = label;
     }
-
 }
 
 export interface MainAppBarProps {
     onMenuItemClick: (item: string) => void;
     menuItems: Array<MenuItemInfo>;
 };
-
 
 export function MainAppBar(props: MainAppBarProps) {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -93,5 +85,5 @@ export function MainAppBar(props: MainAppBarProps) {
     );
 }
 
-                 
+
 export default MainAppBar;
