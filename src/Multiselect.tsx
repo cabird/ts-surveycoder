@@ -123,6 +123,7 @@ export function Multiselect(props: MultiselectProps) {
                   ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
                   : undefined
               }
+              onClose={() => setContextMenu(null)}
               >
                 <MenuItem key="rename" id="rename" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Rename, e)}>Rename</MenuItem>
                 <MenuItem key="merge" id="merge" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Merge, e)}>Merge into other code</MenuItem>

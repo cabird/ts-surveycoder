@@ -15,7 +15,7 @@ export class SurveyResponseCodes {
             this.responseCodes.set(responseId, new Map<string, string[]>());
         }
         return this.responseCodes.get(responseId)!;
-        
+
     }
 
     public addResponseCodeForResponseAndQuestion(responseId: string, questionId: string, responseCode: string) {
@@ -63,10 +63,11 @@ export class SurveyResponseCodes {
         const newCodes = codes.filter((code) => code !== oldCode && code !== newCode);
         newCodes.push(newCode);
         this.questionCodes.set(questionId, newCodes);
-        
+
         // now update all the responses
         this.responseCodes.forEach((response) => {
             const responseCodes = response.get(questionId);
+
             //we only need to do anything if the response has the old code for this question
             if (responseCodes && responseCodes.includes(oldCode)) {
                 //remove the old code and then add the new code if it's not already in there (which is possible if the code already exists)
@@ -74,8 +75,9 @@ export class SurveyResponseCodes {
                 if (!responseCodes.includes(newCode)) {
                     newCodes.push(newCode);
                 }
-                response.set(questionId, responseCodes);
+                response.set(questionId, newCodes);
             }
+
         });
     }
 

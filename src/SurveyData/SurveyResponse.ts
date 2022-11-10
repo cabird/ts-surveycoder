@@ -23,7 +23,7 @@ export class SurveyResponse {
         if (this.answerDict.has(questionName)) {
             return this.answerDict.get(questionName)!;
         }
-        return "<NONE>";
+        return "";
     }
 
     public HasAnswerForQuestion(questionName: string): boolean {

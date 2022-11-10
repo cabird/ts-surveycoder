@@ -11,13 +11,26 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { PropaneRounded } from '@mui/icons-material';
 
-interface MainAppBarProps {
+export class MenuItemInfo
+{
+    id: string;
+    label: string;
+    //make a constructor that takes in the id and label
+    constructor(id: string, label: string = id)
+    {
+        this.id = id;
+        this.label = label;
+    }
+
+}
+
+export interface MainAppBarProps {
     onMenuItemClick: (item: string) => void;
-    menuItems: Array<string>;
+    menuItems: Array<MenuItemInfo>;
 };
 
 
-function MainAppBar(props: MainAppBarProps) {
+export function MainAppBar(props: MainAppBarProps) {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -64,7 +77,7 @@ function MainAppBar(props: MainAppBarProps) {
 
                         props.menuItems.map((item) => {
                             return (
-                                <MenuItem key={item} id={item} onClick={handleSelected}>{item}</MenuItem>
+                                <MenuItem key={item.id} id={item.id} onClick={handleSelected}>{item.label}</MenuItem>
                             );
                         })
                     }

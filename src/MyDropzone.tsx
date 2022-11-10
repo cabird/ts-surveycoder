@@ -36,8 +36,8 @@ function MyDropzone(props: any) {
     const onDrop = useCallback((acceptedFiles: any) => {
         acceptedFiles.forEach((file: any) => {
             props.onFileDropped(file);
-            /*const reader: FileReader = new FileReader();
 
+            /*const reader: FileReader = new FileReader();
             reader.onabort = () => console.log('file reading was aborted');
             reader.onerror = () => console.log('file reading has failed');
             reader.onload = () => props.onBlobReady(reader.result);

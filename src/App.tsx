@@ -12,15 +12,18 @@ import { SurveyResponse } from './SurveyData/SurveyResponse';
 import QuestionSelect from './QuestionSelect';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { convertCompilerOptionsFromJson } from 'typescript';
-import MainAppBar from './MainAppBar';
+import {MainAppBar, MenuItemInfo} from './MainAppBar';
 import Box from '@mui/material/Box';
-import { IconButton } from '@mui/material';
+import { IconButton, MenuItem } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Grid from '@mui/material/Unstable_Grid2';
 import Stack from '@mui/material/Stack';
+import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
 import RenameDialog from './RenameDialog';
 import MergeCodesDialog from './MergeCodesDialog';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import JumpToResponseNumDialog from './JumpToResponseNumDialog';
 
 interface AppProps {
   name: string;
@@ -37,6 +40,11 @@ interface AppState {
   renameCode: string;
   mergeCodesDialogOpen: boolean;
   mergeCode: string;
+  mergeCodeSet: string[];
+  snackbarOpen: boolean;
+  snackbarMessage: string;
+  snackbarSeverity: "success" | "info" | "warning" | "error";
+  jumpToResponseNumDialogOpen: boolean;
 }
 
 enum QuestionDirection {
@@ -49,8 +57,14 @@ enum WhichQuestion {
   Secondary
 }
 
-class App extends React.Component<AppProps, AppState> {
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+    props,
+    ref,
+  ) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
+class App extends React.Component<AppProps, AppState> {
 
   constructor(props: any) {
     super(props);
@@ -65,18 +79,27 @@ class App extends React.Component<AppProps, AppState> {
       renameCode: "",
       mergeCodesDialogOpen: false,
       mergeCode: "",
+      mergeCodeSet: [],
+      snackbarOpen: false,
+      snackbarMessage: "",
+      snackbarSeverity: "success",
+      jumpToResponseNumDialogOpen: false
     };
   }
 
-  private loadSurveyFromBlob = (fileBlob: Blob): void => {
+  private loadSurveyFromBlob = (fileBlob: File): void => {
     console.log("loadSurveyFromBlob");
+    console.log(fileBlob);
+
     const surveyPromise = Survey.readSurveyFromExcelFile(fileBlob);
     surveyPromise.then((survey) => {
       console.log("Survey Loaded");
       console.log("There are " + survey.Responses.length + " responses");
       console.log("There are " + survey.Questions.length + " questions");
       this.updateUIFromSurvey(survey);
+      //this.ShowSnackbarMessage(`Loaded Survey from ${fileBlob.name}`, "success");
     });
+      
   }
 
   private updateUIFromSurvey = (survey: Survey): void => {
@@ -106,12 +129,12 @@ class App extends React.Component<AppProps, AppState> {
 
   private ChangeResponse = (direction: QuestionDirection) => {
     console.log("ChangeResponse");
-    if (this.state.survey == undefined || this.state.curResponse == undefined) {
+    if (this.state.survey === undefined || this.state.curResponse === undefined) {
       return;
     }
 
     //note that the response number is 1-based, not 0-based, but the index is 0-based
-    let newResponseIndex = direction == QuestionDirection.Previous ? this.state.curResponse.ResponseNumber - 2 : this.state.curResponse.ResponseNumber;
+    let newResponseIndex = direction === QuestionDirection.Previous ? this.state.curResponse.ResponseNumber - 2 : this.state.curResponse.ResponseNumber;
 
     //stay within bounds
     if (newResponseIndex >= 0 && newResponseIndex < this.state.survey.Responses.length) {
@@ -130,7 +153,6 @@ class App extends React.Component<AppProps, AppState> {
   private updateCodeState = () => {
     if (this.isSurveyLoaded()) {
       const selectedCodes = this.state.survey?.getCodesForResponseAndQuestion(this.state!.curResponse!, this.state!.curQuestion!);
-      const sortedSelectedCodes = selectedCodes?.slice();
       const codeSet = this.state.survey?.getCodesForQuestion(this.state!.curQuestion!);
       console.log("updateCodeState: code set is " + codeSet);
       console.log("updateCodeState: selected codes are " + selectedCodes);
@@ -144,7 +166,7 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private isSurveyLoaded = (): boolean => {
-    return this.state.survey != undefined && this.state.curQuestion != undefined && this.state.curResponse != undefined;
+    return this.state.survey !== undefined && this.state.curQuestion !== undefined && this.state.curResponse !== undefined;
   }
 
   private toggleCode = (value: string) => {
@@ -156,7 +178,7 @@ class App extends React.Component<AppProps, AppState> {
       let newCodes: string[];
       if (index > -1) {
         // remove the code
-        newCodes = codes.filter((c) => c != value);
+        newCodes = codes.filter((c) => c !== value);
       } else {
         // add the code
         newCodes = codes.concat(value);
@@ -182,19 +204,67 @@ class App extends React.Component<AppProps, AppState> {
     this.updateCodeState();
   }
 
-  private menuItems = ["Info", "Export", "Import", "Settings"];
+  private menuItems = [
+    new MenuItemInfo("Info"),
+    new MenuItemInfo("Export"),
+    new MenuItemInfo("Import"),
+    new MenuItemInfo("Settings"), 
+    new MenuItemInfo("next_uncoded", "Move to Next Uncoded Response"),
+    new MenuItemInfo("to_response_number", "Move to Response Number")];
+
   private handleMenuItemClick = (menuItem: string) => {
     console.log("handleMenuItemClick: " + menuItem);
     switch (menuItem) {
       case "Export":
         this.exportSurvey();
         break;
+      case "next_uncoded":
+        this.moveNextUncoded();
+        break;
+      case "to_response_number":
+        this.setState({ ...this.state, jumpToResponseNumDialogOpen: true });
+        break;
     }
   }
 
+  private moveNextUncoded = () => {
+    if (this.state.survey) {
+      // get current response number
+      let curResponseNumber = this.state.curResponse!.ResponseNumber;
+      curResponseNumber++
+      // get the next uncoded response
+      while (curResponseNumber < this.state.survey.Responses.length) {
+        const response = this.state.survey.Responses[curResponseNumber];
+        const questionAnswer = response.GetAnswerForQuestion(this.state.curQuestion!.QuestionId);
+        const codes = this.state.survey.getCodesForResponseAndQuestion(response, this.state.curQuestion!);
+        if (questionAnswer && (codes === undefined || codes.length === 0)) {
+          this.setState({
+            ...this.state,
+            curResponse: response,
+          }, this.updateCodeState);
+          break;
+        }
+        curResponseNumber++;
+      }
+      if (curResponseNumber >= this.state.survey.Responses.length) {
+       this.ShowSnackbarMessage("No more uncoded responses", "info");
+      }
+    }
+  }
+
+  private ShowSnackbarMessage(message: string, severity: "success" | "info" | "warning" | "error") {
+    this.setState({
+      ...this.state,
+      snackbarOpen: true,
+      snackbarMessage: message,
+      snackbarSeverity: severity
+    })
+  }
+
+
   private exportSurvey = () => {
     console.log("exportSurvey");
-    if (this.state.survey != undefined) {
+    if (this.state.survey !== undefined) {
       var contents = this.state.survey.exportSurveyToExcelFile();
       return;
       //const blob = new Blob([contents], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
@@ -224,26 +294,17 @@ class App extends React.Component<AppProps, AppState> {
         });
         break;
       case CodesContextMenuItems.Merge:
+        const mergeCodeSet = this.state.codeSet.filter((c) => c !== code);
         this.setState({
           ...this.state,
           mergeCodesDialogOpen: true,
-          mergeCode: code
+          mergeCode: code,
+          mergeCodeSet: mergeCodeSet
         });
         //this.mergeCode(code);
         break;
     }
   }
-
-  /*private renameCode = (oldCodeName: string) => {
-    console.log("renameCode: " + oldCodeName);
-    if (this.isSurveyLoaded()) {
-      this.setState({
-        ...this.state,
-        renameDialogOpen: true,
-        renameCode: oldCodeName
-      });
-    }
-  }*/
   
   private handleRenameDialogClose = (action: string, newCodeName: string) => {
     console.log("handleRenameDialogClose: " + action + " " + newCodeName);
@@ -274,6 +335,36 @@ class App extends React.Component<AppProps, AppState> {
       mergeCode: ""
     }, this.updateCodeState);
   }
+
+  private handleJumpToResponseNumDialogClose = (action: string, responseNum: number) => {
+    console.log("handleJumpToResponseNumDialogClose: " + action + " " + responseNum);
+    if (action === "ok" && this.isSurveyLoaded()) {
+      console.log("jumping to response number " + responseNum);
+      if (responseNum > 0 && responseNum <= this.state.survey!.Responses.length) {
+        this.setState({
+          ...this.state,
+          curResponse: this.state.survey!.Responses[responseNum-1],
+          jumpToResponseNumDialogOpen: false
+        }, this.updateCodeState);
+      }
+    } else {
+      console.log("canceling jump to response number");
+      this.setState({
+        ...this.state,
+        jumpToResponseNumDialogOpen: false,
+      });
+    }
+    
+  }
+
+
+  private handleSnackbarClose = (event: React.SyntheticEvent<any, Event> | Event, reason?: SnackbarCloseReason) => {
+    console.log("handleSnackbarClose: " + reason);
+    this.setState({
+      ...this.state,
+      snackbarOpen: false
+      });
+  }
   
 
 
@@ -282,12 +373,12 @@ class App extends React.Component<AppProps, AppState> {
     let surveyResponseText = "";
     let surveySecondaryResponseText = "";
 
-    if (this.state.survey != undefined) {
+    if (this.state.survey !== undefined) {
       questionOptions = this.state.survey.Questions;
-      if (this.state.curQuestion != undefined && this.state.curResponse != undefined) {
+      if (this.state.curQuestion !== undefined && this.state.curResponse !== undefined) {
         surveyResponseText = this.state.curResponse.GetAnswerForQuestion(this.state.curQuestion.QuestionId);
       }
-      if (this.state.curSecondaryQuestion != undefined && this.state.curResponse != undefined) {
+      if (this.state.curSecondaryQuestion !== undefined && this.state.curResponse !== undefined) {
         surveySecondaryResponseText = this.state.curResponse.GetAnswerForQuestion(this.state.curSecondaryQuestion.QuestionId);
       }
     }
@@ -297,7 +388,7 @@ class App extends React.Component<AppProps, AppState> {
 
     let responseNumString = "Response: "
     let questionString = "Question ID: ";
-    if (this.state.survey != undefined) {
+    if (this.state.survey !== undefined) {
       responseNumString += this.state.curResponse?.ResponseNumber + " of " + this.state.survey.Responses.length;
       questionString += this.state.curQuestion?.QuestionId;
     }
@@ -388,9 +479,24 @@ class App extends React.Component<AppProps, AppState> {
           key={"Merge::" + this.state.curQuestion?.QuestionId + "::" + this.state.mergeCode} 
           open={this.state.mergeCodesDialogOpen}
           onClose={this.handleMergeCodesDialogClose}
-          codeSet={this.state.codeSet}
+          codeSet={this.state.mergeCodeSet}
           oldCodeName={this.state.mergeCode}
         />
+        <JumpToResponseNumDialog
+          open={this.state.jumpToResponseNumDialogOpen}
+          onClose={this.handleJumpToResponseNumDialogClose}
+          numResponses={this.state.survey?.Responses.length || 0}
+        />
+
+        <Snackbar 
+          open={this.state.snackbarOpen} 
+          autoHideDuration={5000} 
+          onClose={this.handleSnackbarClose}
+          message={this.state.snackbarMessage}>
+            <Alert onClose={this.handleSnackbarClose} severity={this.state.snackbarSeverity}>
+              {this.state.snackbarMessage}
+              </Alert>
+          </Snackbar>
       </div>
     );
   }

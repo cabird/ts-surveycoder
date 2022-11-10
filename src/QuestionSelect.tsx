@@ -30,8 +30,9 @@ export default function QuestionSelect(props: QuestionSelectProps) {
 
     // check if the selected question is in the list of options
     // if not, set the question to the first option
-    if (props.options.findIndex((q) => q.QuestionId === question) === -1) {
-        setQuestion(props.options[0].QuestionId);
+    if (props.options.length > 0 && 
+        props.options.findIndex((q) => q.QuestionId === question) === -1) {
+                setQuestion(props.options[0].QuestionId);
     }
 
     const handleChange = (event: SelectChangeEvent) => {
