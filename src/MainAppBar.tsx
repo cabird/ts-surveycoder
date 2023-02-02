@@ -42,7 +42,6 @@ export function MainAppBar(props: MainAppBarProps) {
     };
 
     return (
-
         <AppBar position="relative">
             <Toolbar>
 
