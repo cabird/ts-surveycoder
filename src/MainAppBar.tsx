@@ -44,13 +44,12 @@ export function MainAppBar(props: MainAppBarProps) {
     return (
         <AppBar position="relative">
             <Toolbar>
-
                 <IconButton
                     size="large"
                     edge="start"
                     color="inherit"
                     aria-label="menu"
-                    sx={{ mr: 2, flexGrow: 0 }}
+                    sx={{ mr: 0, flexGrow: 0 }}
                     onClick={handleClick}
                 >
                     <MenuIcon />
@@ -65,7 +64,6 @@ export function MainAppBar(props: MainAppBarProps) {
                     }}
                 >
                     {
-
                         props.menuItems.map((item) => {
                             return (
                                 <MenuItem key={item.id} id={item.id} onClick={handleSelected}>{item.label}</MenuItem>
@@ -79,10 +77,7 @@ export function MainAppBar(props: MainAppBarProps) {
 
             </Toolbar>
         </AppBar>
-
-
     );
 }
-
 
 export default MainAppBar;

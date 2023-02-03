@@ -14,6 +14,7 @@ import { useCoderStore } from './CoderState';
 import shallow from 'zustand/shallow';
 import RenameDialog from './RenameDialog';
 import MergeCodesDialog from './MergeCodesDialog';
+import { Stack } from '@mui/system';
 
 
 export enum CodesContextMenuItems {
@@ -148,62 +149,56 @@ export function Multiselect() {
     setRenameDialogOpen(false);
   }
 
-    // move this into the dialog
-    const handleMergeCodesDialogClose = (action: string, codeToMergeInto: string) => {
-      console.log("handleMergeCodesDialogClose: " + action + " " + codeToMergeInto);
-      if (action === "ok" && survey && curQuestion) {
-        console.log("merging code " + rightClickedCode + " into " + codeToMergeInto);
-        survey.mergeCodesForQuestion(curQuestion, rightClickedCode, codeToMergeInto);
-      } 
-      setRightClickedCode("");
-      setMergeCodesDialogOpen(false);
+  // move this into the dialog
+  const handleMergeCodesDialogClose = (action: string, codeToMergeInto: string) => {
+    console.log("handleMergeCodesDialogClose: " + action + " " + codeToMergeInto);
+    if (action === "ok" && survey && curQuestion) {
+      console.log("merging code " + rightClickedCode + " into " + codeToMergeInto);
+      survey.mergeCodesForQuestion(curQuestion, rightClickedCode, codeToMergeInto);
     }
-  
+    setRightClickedCode("");
+    setMergeCodesDialogOpen(false);
+  }
+
 
   return (
     <>
-      <Grid container spacing={2}>
-        <Grid xs style={{ width: "100%" }}>
-          <TextField style={{ width: "100%" }} variant='outlined' value={newCodeValue} label='Add a code' onChange={onNewCodeChange}
-            onKeyPress={handleKeyPress} />
-        </Grid>
-        <Grid>
-          <Button variant='contained' style={{ height: "100%" }} onClick={addNewCode} >Add</Button>
-        </Grid>
-        <Grid xs={12}>
-          <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray' }}>
-            <List component="nav" aria-label="Code List" sx={{ minHeight: 600 }} >
-              {allCodes.map((code) => (
-                <ListItemButton
-                  onContextMenu={(e) => handleContextMenu(code, e)}
-                  key={code}
-                  sx={{
-                    height: 24,
-                    '&.Mui-selected': { backgroundColor: '#1976d2', color: 'white' },
-                    '&.Mui-selected:hover': { backgroundColor: '#1976d2dd', color: 'white' },
-                  }}
-                  selected={selCodes.indexOf(code) !== -1}
-                  onClick={() => toggleCode(code)}>
-                  <ListItemText primary={code} />
-                </ListItemButton>
-              ))}
-              <Menu
-                open={contextMenu !== null}
-                anchorReference="anchorPosition"
-                anchorPosition={
-                  contextMenu !== null
-                    ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                    : undefined
-                }
-                onClose={() => setContextMenu(null)}
-              >
-                <MenuItem key="rename" id="rename" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Rename, e)}>Rename</MenuItem>
-                <MenuItem key="merge" id="merge" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Merge, e)}>Merge into other code</MenuItem>
-              </Menu>
-            </List>
-          </Box>
-        </Grid>
-      </Grid>
+      <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
+        <TextField style={{ width: "100%" }} variant='outlined' value={newCodeValue} label='Add a code' onChange={onNewCodeChange}
+          onKeyPress={handleKeyPress} />
+        <Button variant='contained' style={{ height: "100%" }} onClick={addNewCode} >Add</Button>
+      </Stack>
+      <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray', gridRowStart: 2, gridRowEnd: 6 }}>
+        <List component="nav" aria-label="Code List"  >
+          {allCodes.map((code) => (
+            <ListItemButton
+              onContextMenu={(e) => handleContextMenu(code, e)}
+              key={code}
+              sx={{
+                height: 24,
+                '&.Mui-selected': { backgroundColor: '#1976d2', color: 'white' },
+                '&.Mui-selected:hover': { backgroundColor: '#1976d2dd', color: 'white' },
+              }}
+              selected={selCodes.indexOf(code) !== -1}
+              onClick={() => toggleCode(code)}>
+              <ListItemText primary={code} />
+            </ListItemButton>
+          ))}
+          <Menu
+            open={contextMenu !== null}
+            anchorReference="anchorPosition"
+            anchorPosition={
+              contextMenu !== null
+                ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                : undefined
+            }
+            onClose={() => setContextMenu(null)}
+          >
+            <MenuItem key="rename" id="rename" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Rename, e)}>Rename</MenuItem>
+            <MenuItem key="merge" id="merge" onClick={(e) => handleContextMenuClick(CodesContextMenuItems.Merge, e)}>Merge into other code</MenuItem>
+          </Menu>
+        </List>
+      </Box>
       <RenameDialog
         open={renameDialogOpen}
         onClose={handleRenameDialogClose}

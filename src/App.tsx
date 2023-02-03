@@ -9,7 +9,6 @@ import QuestionSelect, { WhichQuestion } from './QuestionSelect';
 import { MainAppBar, MenuItemInfo } from './MainAppBar';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import Grid from '@mui/material/Unstable_Grid2';
 import Stack from '@mui/material/Stack';
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
@@ -43,13 +42,13 @@ const appBarMenuItems = [
 
 export function App(props: AppProps) {
 
-  const { survey, 
-    setSurvey, 
-    curQuestion, 
-    curSecondaryQuestion, 
-    curResponse, 
-    setCurQuestion, 
-    setCurResponse, 
+  const { survey,
+    setSurvey,
+    curQuestion,
+    curSecondaryQuestion,
+    curResponse,
+    setCurQuestion,
+    setCurResponse,
     setCurSecondaryQuestion,
     setJumpToResponseNumDialogOpen } =
     useCoderStore(state =>
@@ -197,67 +196,47 @@ export function App(props: AppProps) {
       <div>
         <MyDropzone onFileDropped={loadSurveyFromBlob} />
       </div>
-      <Grid container spacing={2} alignItems="stretch" sx={{ height: "100%", width: "95%", marginTop: 1, marginLeft: 1, marginRight: 1, marginBottom: 1 }}>
-        <Grid xs={9}>
-          <Grid container spacing={2} alignItems="stretch" sx={{ height: "100%", width: "100%", marginTop: 1, marginLeft: 1, marginRight: 1, marginBottom: 1 }}>
-            <Grid >
-              <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => ChangeResponse(QuestionDirection.Previous)}>
-                <ArrowBackIcon />
-              </Button>
-            </Grid>
-            <Grid >
-              <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => ChangeResponse(QuestionDirection.Next)}>
-                <ArrowForwardIcon />
-              </Button>
-            </Grid>
-            <Grid xs>
-              <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
-                <div>{responseNumString}</div>
-                <div>{questionString}</div>
-              </Stack>
-            </Grid>
-            <Grid xs={12} >
-              <QuestionSelect
-                whichQuestion={WhichQuestion.Primary}
-                label="Question"
-              />
-            </Grid>
-            <Grid xs={12} >
-              <TextField
-                id="survey-response-text"
-                label="response"
-                multiline
-                variant="outlined"
-                value={surveyResponseText}
-                minRows={10}
-                inputProps={{ readOnly: true, height: "100%" }}
-                style={{ width: "100%", height: "100%" }}
-              />
-            </Grid>
-            <Grid xs={12} >
-              <QuestionSelect
-                label="Secondary Question"
-                whichQuestion={WhichQuestion.Secondary}
-              />
-            </Grid>
-            <Grid xs={12} sx={{ height: "100%" }} >
-              <TextField
-                id="survey-response-text"
-                label="response"
-                multiline
-                variant="outlined"
-                value={surveySecondaryResponseText}
-                minRows={10}
-                inputProps={{ readOnly: true, height: "100%" }}
-                style={{ width: "100%", height: "100%" }}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
-        <Grid xs={3}>
-          <Multiselect />
-        </Grid>
-      </Grid>
+      <div id="container1">
+        <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
+          <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => ChangeResponse(QuestionDirection.Previous)}>
+            <ArrowBackIcon />
+          </Button>
+          <Button variant="contained" sx={{ width: 5, height: "100%" }} onClick={() => ChangeResponse(QuestionDirection.Next)}>
+            <ArrowForwardIcon />
+          </Button>
+          <div>{responseNumString}</div>
+          <div>{questionString}</div>
+        </Stack>
+        <div style={{ gridRowStart: 2, gridColumnStart: 1 }}>
+          <QuestionSelect
+            whichQuestion={WhichQuestion.Primary}
+            label="Question"
+          />
+        </div>
+        <TextField
+          id="survey-response-text"
+          label="response"
+          multiline
+          variant="outlined"
+          value={surveyResponseText}
+          inputProps={{ readOnly: true}}
+          style={{flexGrow: 1, flexShrink: 1, flexBasis: "auto"}}
+        />
+        <QuestionSelect
+          label="Secondary Question"
+          whichQuestion={WhichQuestion.Secondary}
+        />
+        <TextField
+          id="survey-response-text"
+          label="response"
+          multiline
+          variant="outlined"
+          value={surveySecondaryResponseText}
+          inputProps={{ readOnly: true}}
+          style={{ flexGrow: 1, flexShrink: 1, flexBasis: "auto" }}
+        />
+        <Multiselect />
+      </div>
       <JumpToResponseNumDialog />
       <Snackbar
         open={snackbarOpen}

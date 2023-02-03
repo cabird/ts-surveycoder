@@ -169,12 +169,12 @@ export class Survey {
       const response: SurveyResponse = new SurveyResponse(responseNumber, responseId);
 
       for (let j = 0; j < row.length; j++) {
+        //check if the cell is empty or whitespace
+        if (row[j] === undefined || row[j] === null || row[j].toString().trim() === "") {
+          continue;
+        }
         if (allColumnNames[j].endsWith("-codes"))
         {
-          //check if the cell is empty or whitespace
-          if (row[j] === undefined || row[j] === null || row[j].toString().trim() === "") {
-            continue;
-          }
           const questionName = allColumnNames[j].replace("-codes", "");
           //split codes by comma or semicolon
           const codes = row[j].toString().split(/[,;]/).map((s) => s.trim());

@@ -1,22 +1,50 @@
+
+html
+{
+  margin: 0px;
+  padding: 0px;
+  height: 100%;
+}
+
+body
+{
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+  font-family: sans-serif;
+}
+
+#root
+{
+  margin: 0px;
+  padding: 0px;
+  height: 100%;
+}
+
 .App {
   display: flex;
+  height: 100%;
   width: 100%;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
 }
+
 li{
   list-style-type: none;
 }
-button-junk {
-  height: 30px;
-  width: 150px;
-  background-color: turquoise;
-  border-radius: 5px;
+
+textarea {
+  height: 100%;
 }
 
-.App {
-  text-align: center;
+div.MuiTextField-root > div.MuiInputBase-multiline
+{
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 .App-logo {
@@ -54,13 +82,18 @@ button-junk {
   }
 }
 
-#response-div-junk {
-  margin: 20px;
-  padding: 20px;
-
-}
-
-#survey-response-text-junk {
-  width: 500px;
+#container1 {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 75% 25%;
+  grid-template-rows: 50px 50px 1fr 50px 1fr;
+  grid-column-gap: 10px;
+  grid-row-gap: 11px;
+  grid-auto-flow: column;
+  justify-items: stretch;
+  align-items: stretch;
+  padding: 1px;
+  margin: 1px;
 }
 
