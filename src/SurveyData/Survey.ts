@@ -25,8 +25,9 @@ export class SurveyQuestion {
 export class Survey {
 
   private columnNames: string[] = [];
-  private allColumnNames: string[] = [];
   private columnTexts: string[] = [];
+  private allColumnNames: string[] = [];
+  private IsQualticsSurvey: boolean = false;
 
   private questions: SurveyQuestion[];
   public get Questions(): SurveyQuestion[] {
@@ -53,6 +54,18 @@ export class Survey {
   public getCodesForResponseAndQuestion(response: SurveyResponse, question: SurveyQuestion): string[] {
     const answer = this.responseCodes.getCodesForResponseAndQuestion(response.ResponseId, question.QuestionId);
     return answer;
+  }
+
+  public getResponsesForCodeAndQuestion(code: string, question: SurveyQuestion): SurveyResponse[] {
+    const responseIds = this.responseCodes.getResponsesForCodeAndQuestion(code, question.QuestionId);
+    const responses: SurveyResponse[] = [];
+    responseIds.forEach((responseId) => {
+      const response = this.ResponseFromResponseId(responseId);
+      if (response !== undefined) {
+        responses.push(response);
+      }
+    });
+    return responses;
   }
 
   public getCodesForQuestion(question: SurveyQuestion): string[] {
@@ -115,6 +128,15 @@ export class Survey {
     }
 
 
+  public static async readSurveyFromCSVFile(fileBlob: Blob): Promise<Survey> {
+    console.log("reading survey from csv file");
+    const buffer = await fileBlob.arrayBuffer();
+    const wb = read(buffer, {type:"binary"});
+    var data: (number | string)[][] = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+    console.log(data);
+    const survey = Survey.fromArrayOfArrays(data);
+    return survey;
+  }
 
   //add a response to the survey
   public static async readSurveyFromExcelFile(fileBlob: Blob): Promise<Survey> {
@@ -127,19 +149,38 @@ export class Survey {
     console.log(data);
 
     // these are the values for qualtrics config.  Should probably move to a config object
-    const survey = Survey.fromArrayOfArrays(data, 0, 1, 2, 'ResponseId');
+    const survey = Survey.fromArrayOfArrays(data);
     return survey;
   }
 
+  private static IsSurveyDataFromQualtrics(data: (number | string)[][]): boolean {
+    if (data.length < 3) return false;
+    if (data[0].length < 1) return false;
+    if (data[1].length < 1) return false;
+    if (data[0][0].toString().toLowerCase().replace(' ', '') === 
+          data[1][0].toString().toLowerCase().replace(' ', '')) return true;
+    return false;
+  }
+
+  private static GetValueOrDefault(value: string | number | undefined, defaultValue: string | number): string | number {
+    if (value === undefined || value === null || value === "") return defaultValue;
+    return value;
+  }
+
   /* load the survey data from an array of arrays. */
-  private static fromArrayOfArrays(data: (number | string)[][], headerRow: 
-    number, textRow: number, responseStartRow: number, responseIdName: string): Survey {
+  private static fromArrayOfArrays(data: (number | string)[][]): Survey {
     const responses: SurveyResponse[] = [];
     const questions: SurveyQuestion[] = [];
+    const IsQualticsSurvey = Survey.IsSurveyDataFromQualtrics(data);
+    let headerRow = 0;
+    let textRow = 0;
 
-    //read the column names and text
-    for (let i = 0; i < data[headerRow].length; i++) {
-      
+    if (IsQualticsSurvey) {
+      console.log('This is a qualtrics survey');
+      textRow = 1;
+    } else
+    {
+      console.log('This is not a qualtrics survey');
     }
 
     /* grab the headers and the text, paying special attention to the code columns */
@@ -147,25 +188,34 @@ export class Survey {
     const columnNames: string[] = [];
     const columnTexts: string[] = [];
     for (let i = 0; i < data[headerRow].length; i++) {
-      const colName = data[headerRow][i].toString();
+
+      const colName = this.GetValueOrDefault(data[headerRow][i], "col_"+(i+1)).toString();
+      const colText = this.GetValueOrDefault(data[textRow][i], "col_"+(i+1)).toString();
       allColumnNames.push(colName);
       if (colName.endsWith("-codes")) continue;
       columnNames.push(colName);
-      columnTexts.push(data[textRow][i].toString());
-      questions.push(new SurveyQuestion(colName, data[textRow][i].toString()));
+      columnTexts.push(colText);
+      questions.push(new SurveyQuestion(colName, colText));
     }
 
-    
-    const responseIdColumn = questions.findIndex((q) => q.QuestionId === responseIdName);
+    var responseIdColumn = -1;
+    if (IsQualticsSurvey) {
+      // There is a column named "ResponseId" in all qualtrics surveys I have seen.
+      // But it's honestly not the end of the world if we don't fint it, since we default to the response number.
+      responseIdColumn = questions.findIndex((q) => q.QuestionId === "ResponseId");
+      console.log('responseIdColumn = ' + responseIdColumn);
+    }
+
     // assert that we actually found it and the id column is not -1...
     const surveyResponseCodes = new SurveyResponseCodes();
 
     //read the responses
     let responseNumber = 0;
-    for (let i = responseStartRow; i < data.length; i++) {
+    for (let i = textRow+1; i < data.length; i++) {
       responseNumber++;
       const row = data[i];
-      const responseId = row[responseIdColumn].toString();
+      // if there is no response ID column then we use the response number as the ID
+      const responseId = responseIdColumn >= 0 ? row[responseIdColumn].toString() : responseNumber.toString();
       const response: SurveyResponse = new SurveyResponse(responseNumber, responseId);
 
       for (let j = 0; j < row.length; j++) {
@@ -184,11 +234,11 @@ export class Survey {
         }
       }
       responses.push(response);
-
     }
 
     // TODO: fix this so that we create the survey up front and add the data as we go...
     const survey: Survey = new Survey(questions);
+    survey.IsQualticsSurvey = IsQualticsSurvey;
     survey.responseCodes = surveyResponseCodes;
     survey.responses = responses;
     survey.columnNames = columnNames;
@@ -217,7 +267,9 @@ export class Survey {
       }
     }
     rows.push(mergedColumnNames);
-    rows.push(mergedColumnText);
+    if (this.IsQualticsSurvey) {
+      rows.push(mergedColumnText);
+    }
 
     //add the responses
     for (let i = 0; i < this.responses.length; i++) {

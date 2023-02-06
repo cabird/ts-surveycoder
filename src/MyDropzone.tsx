@@ -35,13 +35,8 @@ const baseStyle = {
 function MyDropzone(props: any) {
     const onDrop = useCallback((acceptedFiles: any) => {
         acceptedFiles.forEach((file: any) => {
+            console.log("User dropped file " + file.name);
             props.onFileDropped(file);
-
-            /*const reader: FileReader = new FileReader();
-            reader.onabort = () => console.log('file reading was aborted');
-            reader.onerror = () => console.log('file reading has failed');
-            reader.onload = () => props.onBlobReady(reader.result);
-            reader.readAsArrayBuffer(file);*/
         }
         );
 
@@ -59,6 +54,8 @@ function MyDropzone(props: any) {
         accept: {
             //excel mimetypes
             'application/vnd.ms-excel': ['.xlsx', '.xls'],
+            //csv mimetypes
+            'text/csv': ['.csv']
         }});
 
     const style = useMemo(() => ({
@@ -76,9 +73,7 @@ function MyDropzone(props: any) {
     <div {...getRootProps({style, className: "dropzone"})}>
         <input {...getInputProps()} />
         {
-            isDragActive ?
-                <p>Drop the files here ...</p> :
-                <p>Drop Survey Excel File here</p>
+                <p>Drop Survey File (Excel or CSV) here</p>
         }
         </div>
         </section>);

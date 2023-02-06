@@ -20,6 +20,7 @@ interface CoderState {
     snackbarMessage: string;
     snackbarSeverity: "success" | "info" | "warning" | "error";
     jumpToResponseNumDialogOpen: boolean;
+    saveOpenAPIKeyDialogOpen: boolean;
 }
 
 interface CoderActions {
@@ -33,6 +34,7 @@ interface CoderActions {
     setRenameDialogOpen: (open: boolean) => void;
     setMergeCodesDialogOpen: (open: boolean) => void;
     setRightClickedCode: (code: string) => void;
+    setSaveOpenAPIKeyDialogOpen: (open: boolean) => void;
 }
 
 
@@ -53,6 +55,7 @@ export const useCoderStore = create<CoderState & CoderActions>((set) => ({
     snackbarMessage: "",
     snackbarSeverity: "success",
     jumpToResponseNumDialogOpen: false,
+    saveOpenAPIKeyDialogOpen: false,
 
     setSurvey: (survey: Survey) => {
         set({ survey: survey });
@@ -63,6 +66,7 @@ export const useCoderStore = create<CoderState & CoderActions>((set) => ({
     setCodeSet: (codeSet: string[]) => set(() => ({ codeSet: codeSet })),
     setSelectedCodes: (selectedCodes: string[]) => set(() => ({ selectedCodes: selectedCodes })),
     setJumpToResponseNumDialogOpen: (open: boolean) => set(() => ({ jumpToResponseNumDialogOpen: open })),
+    setSaveOpenAPIKeyDialogOpen: (open: boolean) => set(() => ({ saveOpenAPIKeyDialogOpen: open })),
     setRenameDialogOpen: (open: boolean) => set(() => ({ renameDialogOpen: open })),
     setMergeCodesDialogOpen: (open: boolean) => set(() => ({ mergeCodesDialogOpen: open })),
     setRightClickedCode: (code: string) => set(() => ({ rightClickedCode: code })),

@@ -57,6 +57,17 @@ export class SurveyResponseCodes {
         }
     }
 
+    public getResponsesForCodeAndQuestion(code: string, questionId: string): string[] {
+        const responses: string[] = [];
+        this.responseCodes.forEach((response, responseId) => {
+            const responseCodes = response.get(questionId);
+            if (responseCodes && responseCodes.includes(code)) {
+                responses.push(responseId);
+            }
+        });
+        return responses;
+    }
+
     public renameCodeForQuestion(questionId: string, oldCode: string, newCode: string) {
         const codes: string[] = this.questionCodes.get(questionId)!;
         //build a new code set consisting of all codes except the old code and the new code

@@ -2,7 +2,7 @@
 export class SurveyResponse {
     private responseNumber: number;
     private responseId: string;
-    // map from question text to the answer
+    // map from question Id to the answer
     private answerDict: Map<string, string>;
 
     public get ResponseNumber(): number {
@@ -19,19 +19,19 @@ export class SurveyResponse {
         this.answerDict = new Map<string, string>();
     } 
 
-    public GetAnswerForQuestion(questionName: string): string {
-        if (this.answerDict.has(questionName)) {
-            return this.answerDict.get(questionName)!;
+    public GetAnswerForQuestion(QuestionId: string): string {
+        if (this.answerDict.has(QuestionId)) {
+            return this.answerDict.get(QuestionId)!;
         }
         return "";
     }
 
-    public HasAnswerForQuestion(questionName: string): boolean {
-        return this.answerDict.has(questionName);
+    public HasAnswerForQuestion(QuestionId: string): boolean {
+        return this.answerDict.has(QuestionId);
     }
 
-    public SetAnswerForQuestion(questionName: string, answer: string) {
-        this.answerDict.set(questionName, answer);
+    public SetAnswerForQuestion(QuestionId: string, answer: string) {
+        this.answerDict.set(QuestionId, answer);
     }
 
 }

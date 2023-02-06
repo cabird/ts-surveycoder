@@ -15,6 +15,7 @@ import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import JumpToResponseNumDialog from './JumpToResponseNumDialog';
 import { useCoderStore } from './CoderState';
 import shallow from 'zustand/shallow';
+import SaveOpenAPIKeyDialog from './SaveOpenAPIKeyDialog';
 
 interface AppProps {
   name: string;
@@ -38,7 +39,10 @@ const appBarMenuItems = [
   new MenuItemInfo("Import"),
   new MenuItemInfo("Settings"),
   new MenuItemInfo("next_uncoded", "Move to Next Uncoded Response"),
-  new MenuItemInfo("to_response_number", "Move to Response Number")];
+  new MenuItemInfo("to_response_number", "Move to Response Number"),
+  new MenuItemInfo("save_openapi_key", "Save OpenAPI Key"),
+];
+  
 
 export function App(props: AppProps) {
 
@@ -50,7 +54,8 @@ export function App(props: AppProps) {
     setCurQuestion,
     setCurResponse,
     setCurSecondaryQuestion,
-    setJumpToResponseNumDialogOpen } =
+    setJumpToResponseNumDialogOpen,
+    setSaveOpenAPIKeyDialogOpen } =
     useCoderStore(state =>
     ({
       survey: state.survey,
@@ -62,6 +67,7 @@ export function App(props: AppProps) {
       setCurResponse: state.setCurResponse,
       setCurSecondaryQuestion: state.setCurSecondaryQuestion,
       setJumpToResponseNumDialogOpen: state.setJumpToResponseNumDialogOpen,
+      setSaveOpenAPIKeyDialogOpen: state.setSaveOpenAPIKeyDialogOpen,
     }), shallow
     );
 
@@ -70,7 +76,16 @@ export function App(props: AppProps) {
   const loadSurveyFromBlob = (fileBlob: File): void => {
     console.log("loadSurveyFromBlob");
     console.log(fileBlob);
-    const surveyPromise = Survey.readSurveyFromExcelFile(fileBlob);
+    let surveyPromise: Promise<Survey>;
+    //check if file is an excel file by looking at the extension
+    if (fileBlob.name.toLowerCase().endsWith(".xlsx")) {
+      surveyPromise = Survey.readSurveyFromExcelFile(fileBlob);
+    } else if (fileBlob.name.toLowerCase().endsWith(".csv")) {
+      surveyPromise = Survey.readSurveyFromCSVFile(fileBlob);
+    } else {
+      ShowSnackbarMessage("File must be a .csv or .xlsx file", "error");
+      return;
+    }
     surveyPromise.then((survey) => {
       console.log("Survey Loaded");
       console.log("There are " + survey.Responses.length + " responses");
@@ -116,6 +131,9 @@ export function App(props: AppProps) {
       case "to_response_number":
         setJumpToResponseNumDialogOpen(true);
         break;
+      case "save_openapi_key":
+        setSaveOpenAPIKeyDialogOpen(true);
+        break;
     }
   }
 
@@ -151,22 +169,11 @@ export function App(props: AppProps) {
     })*/
   }
 
-
   const exportSurvey = () => {
     console.log("exportSurvey");
     if (survey !== undefined) {
       survey.exportSurveyToExcelFile();
       return;
-      //const blob = new Blob([contents], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      //convert binary string to blob
-
-      /* const blob = new Blob([contents], { type: "application/vnd.ms-excel" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'survey.xlsx');
-      document.body.appendChild(link);
-      link.click(); */
     }
   }
 
@@ -238,6 +245,7 @@ export function App(props: AppProps) {
         <Multiselect />
       </div>
       <JumpToResponseNumDialog />
+      <SaveOpenAPIKeyDialog />
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={5000}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
@@ -15,6 +15,7 @@ import shallow from 'zustand/shallow';
 import RenameDialog from './RenameDialog';
 import MergeCodesDialog from './MergeCodesDialog';
 import { Stack } from '@mui/system';
+import { AskGPT } from './AskGPT';
 
 
 export enum CodesContextMenuItems {
@@ -61,7 +62,6 @@ export function Multiselect() {
   // since the list of selected codes is not part of the state of this component, only the question that contains
   // the selected codes is part of the state of this component, so we need to force a re-render when the selected codes change
   const [localCodes, setLocalCodes] = useState<string[]>();
-
   const [rightClickedCode, setRightClickedCode] = useState<string>("");
 
   const handleContextMenu = (code: string, event: React.MouseEvent) => {
@@ -160,13 +160,36 @@ export function Multiselect() {
     setMergeCodesDialogOpen(false);
   }
 
+  interface GPTSuggestions {
+    responseId: string;
+    questionId: string;
+    codes: string[];
+  }
+  const [gptSuggestedCodes, setGptSuggestedCodes] = useState<GPTSuggestions>({ responseId: "", questionId: "", codes: [] });
+
+  let localGptSuggestedCodes:string[] = [];
+
+  if (curQuestion && curResponse && curQuestion.QuestionId == gptSuggestedCodes.questionId 
+    && curResponse.ResponseId == gptSuggestedCodes.responseId) {
+    localGptSuggestedCodes = gptSuggestedCodes.codes;
+  }
+
+  const getGPTSuggestedCodes = () => {
+    console.log("getGPTSuggestedCodes");
+    if (!curQuestion || !curResponse || !survey) return;
+    AskGPT.getCodeSuggestionsForResponse(survey, curQuestion, curResponse).then((codes) => {
+      console.log("Got codes from GPT: " + codes);
+      setGptSuggestedCodes({ responseId: curResponse.ResponseId, questionId: curQuestion.QuestionId, codes: codes });
+    });
+  }
 
   return (
     <>
       <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
         <TextField style={{ width: "100%" }} variant='outlined' value={newCodeValue} label='Add a code' onChange={onNewCodeChange}
-          onKeyPress={handleKeyPress} />
+          onKeyPress={handleKeyPress}/>
         <Button variant='contained' style={{ height: "100%" }} onClick={addNewCode} >Add</Button>
+        <Button variant='contained' style={{ height: "100%" }} onClick={getGPTSuggestedCodes} >GPT</Button>
       </Stack>
       <Box sx={{ border: 1, borderRadius: 1, borderColor: 'lightgray', gridRowStart: 2, gridRowEnd: 6 }}>
         <List component="nav" aria-label="Code List"  >
@@ -176,9 +199,11 @@ export function Multiselect() {
               key={code}
               sx={{
                 height: 24,
+                '&.gpt_suggested': {borderWidth: 2, borderColor: 'red', borderStyle: 'solid', borderRadius: 1},
                 '&.Mui-selected': { backgroundColor: '#1976d2', color: 'white' },
                 '&.Mui-selected:hover': { backgroundColor: '#1976d2dd', color: 'white' },
               }}
+              className={localGptSuggestedCodes.indexOf(code) !== -1 ? "gpt_suggested" : ""}
               selected={selCodes.indexOf(code) !== -1}
               onClick={() => toggleCode(code)}>
               <ListItemText primary={code} />
