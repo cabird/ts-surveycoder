@@ -36,10 +36,10 @@ export class AskGPT {
             return "";
         }
 
-        var url = "https://api.openai.com/v1/completions";
+        var url = "https://cbird-openai-west-europe.openai.azure.com/openai/deployments/text-davinci-003-deployment/completions?api-version=2022-12-01";
         const reqHeaders: Headers = new Headers();
         reqHeaders.append("Content-Type", "application/json");
-        reqHeaders.append("Authorization", "Bearer " + openai_key);
+        reqHeaders.append("api-key", openai_key);
 
         const requestInit: RequestInit = {
             method: "POST",
