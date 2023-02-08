@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -196,6 +196,20 @@ export function App(props: AppProps) {
     responseNumString += curResponse?.ResponseNumber + " of " + survey!.Responses.length;
     questionString += curQuestion?.QuestionId;
   }
+
+  //handle control left and control right 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        ChangeResponse(event.key === "ArrowLeft" ? QuestionDirection.Previous : QuestionDirection.Next);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [curResponse, survey]);
+  
 
   return (
     <div className="App">
