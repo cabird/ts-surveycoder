@@ -23,7 +23,11 @@ export enum CodesContextMenuItems {
   Merge = "merge"
 }
 
-export function Multiselect() {
+export interface MultiselectProps {
+  textInputRef: React.RefObject<HTMLElement>
+}
+
+export function Multiselect(props: MultiselectProps) {
 
   const { survey, curQuestion, renameDialogOpen, setRenameDialogOpen, mergeCodesDialogOpen, setMergeCodesDialogOpen } =
     useCoderStore(state =>
@@ -187,7 +191,8 @@ export function Multiselect() {
     <>
       <Stack direction={"row"} spacing={2} sx={{ height: "100%" }}>
         <TextField style={{ width: "100%" }} variant='outlined' value={newCodeValue} label='Add a code' onChange={onNewCodeChange}
-          onKeyPress={handleKeyPress}/>
+          onKeyPress={handleKeyPress}
+          inputRef={props.textInputRef}/>
         <Button variant='contained' style={{ height: "100%" }} onClick={addNewCode} >Add</Button>
         <Button variant='contained' style={{ height: "100%" }} onClick={getGPTSuggestedCodes} >GPT</Button>
       </Stack>

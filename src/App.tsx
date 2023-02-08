@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import './App.css';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -197,11 +197,14 @@ export function App(props: AppProps) {
     questionString += curQuestion?.QuestionId;
   }
 
-  //handle control left and control right 
+  const textInputRef = useRef<HTMLElement>(null);
+  //handle control left and control right to move between responses and ctrl-space to focus on the text box
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
         ChangeResponse(event.key === "ArrowLeft" ? QuestionDirection.Previous : QuestionDirection.Next);
+      } else if (event.ctrlKey && event.code === "Space") {
+        textInputRef.current?.focus();
       }
     }
     window.addEventListener("keydown", handleKeyDown);
@@ -209,7 +212,7 @@ export function App(props: AppProps) {
       window.removeEventListener("keydown", handleKeyDown);
     }
   }, [curResponse, survey]);
-  
+
 
   return (
     <div className="App">
@@ -256,7 +259,7 @@ export function App(props: AppProps) {
           inputProps={{ readOnly: true}}
           style={{ flexGrow: 1, flexShrink: 1, flexBasis: "auto" }}
         />
-        <Multiselect />
+        <Multiselect textInputRef={textInputRef}/>
       </div>
       <JumpToResponseNumDialog />
       <SaveOpenAPIKeyDialog />
